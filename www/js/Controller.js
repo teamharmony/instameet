@@ -1,12 +1,12 @@
 var Controller = function () {
-	var hostUrl = "http://gazidevworks.org:8080/ResourceMgmt",
+	var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
 	userLoggedIn,
 	loginBy = "normal",
 	locationTimer,
 	messageMeetingTime,
 	meetingTimers = [];
-
+//"http://gazidevworks.org:8080/ResourceMgmt",
 	var controller = {
 
 		_self : null,
@@ -816,6 +816,8 @@ var Controller = function () {
 			var $meetinglist = $('#meetingList');
 			$meetinglist.empty();
 			$meetinglist.data("userInfo", _self.meetings);
+			
+			$meetinglist.off('click', 'li');
 			$meetinglist.on('click', 'li', function (evt) {
 				var obj = evt.currentTarget,
 				meetingObj;
@@ -945,6 +947,7 @@ var Controller = function () {
 
 		message : function (e, data) {
 			var that = this;
+			
 			this.$messages = $('#page-messages');
 			this.$to = $('#txtTo', this.$messages);
 			this.$subject = $('#txtSubject', this.$messages).val("");
@@ -964,18 +967,33 @@ var Controller = function () {
 				}
 
 			});
-
+				
 			this.$btnSendMessage.off('click');
 			this.$btnSendMessage.on('click', function (e) {
 				_self.loading("show");
+				var replyMessData = $('#page-messages').data('replyMessData'), sendMessData = {}, parentId, topicId;
+							
+				if(replyMessData){
+					parentId = replyMessData.id;
+					if(replyMessData.topicId === -1){
+						topicId = replyMessData.id;
+					} else {
+						topicId = replyMessData.topicId;
+					}
+					sendMessData = { 'parentId' : parentId,
+									 'topicId': topicId,
+									 'toUserName' : that.$to.val(),
+									 'message' : that.$message.val()
+									};
+				} else {
+					sendMessData = { 'toUserName' : that.$to.val(),
+									 'message' : that.$message.val()
+									};
+				}
 				$.ajax({
 					url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 					type : 'POST',
-					data : {
-						'toUserName' : that.$to.val(),
-						'subject' : that.$subject.val(),
-						'message' : that.$message.val()
-					}
+					data : sendMessData
 				}).done(function () {
 					_self.getMessageMeeting();
 					_self.loading("hide");
@@ -992,6 +1010,8 @@ var Controller = function () {
 		},
 
 		messageView : function (e, data) {
+			var that = this;
+			$('#page-messages').removeData('replyMessData');
 			_self.getMessageMeeting();
 			$('#message-view').css('display', 'none');
 			$('#messageListView').css('display', 'block');
@@ -1005,7 +1025,7 @@ var Controller = function () {
 				}
 			});
 
-			if (data.prevPage.attr('id') === 'page-messages') {
+			if(data && data.prevPage.attr('id') === 'page-messages') {
 				$('#message-view').css('display', 'block');
 				$('#messageListView').css('display', 'none');
 			}
@@ -1018,25 +1038,44 @@ var Controller = function () {
 				return;
 			}
 
-			var $messagelist = $('#messageList');
-			$messagelist.empty();
-			$messagelist.data("userInfo", _self.messages);
-			$messagelist.on('click', 'li', function (evt) {
+			this.$messagelist = $('#messageList');
+			this.$messagelist.empty();
+			this.$messagelist.data("userInfo", _self.messages);
+			
+			this.$messagelist.off('click', 'li');
+			this.$messagelist.on('click', 'li', function (evt) {
 				var obj = evt.currentTarget,
-				messObj;
+				messObj,
+				messData = $(this).data('messData');
+				this.$messageViewListItem = $('#messViewList');
+				this.$messageViewListItem.empty();
 				if (obj.tagName === "LI") {
-					for (var i = 0; i < _self.messages.length; i++) {
-						if (_self.messages[i].id === parseInt(obj.id)) {
-							messObj = _self.messages[i];
-							break;
+					var messArr =_self.messages[messData.topicId === -1 ? messData.id : messData.topicId];
+					for (var i = 0; i < messArr.length; i++) {
+						if(messArr[i].fromUserName !== null){
+							this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'</li>');
+						} else {
+							this.$messageViewListItem.append('<li class="messageSent">'+ messArr[i].message +'</li>');
 						}
+						
+						$.ajax({
+							url : hostUrl.concat("/messages/" + messArr[i].id + "?access_token=" + window.bearerToken),
+							type : 'PUT',
+							data : {
+								'status' : '1'
+							}
+						}).done(function () {
+							console.log("Message status updated");
+						});
 					}
 
+					$('#uMessName').text(messData.name);
+										
 					var img = null;
-					if (messObj.fromUserName !== null) {
-						img = messObj.fromUserName;
+					if (messData.fromUserName !== null) {
+						img = messData.fromUserName;
 					} else {
-						img = messObj.toUserName;
+						img = messData.toUserName;
 					}
 
 					$.ajax({
@@ -1048,38 +1087,62 @@ var Controller = function () {
 
 					$('#btnReplyMessage').off('click');
 					$('#btnReplyMessage').on('click', function () {
-						//console.log(messObj);
-						if (messObj.fromUserName !== null) {
-							$('#txtTo').val(messObj.fromUserName);
+						if (messData.fromUserName !== null) {
+							$('#txtTo').val(messData.fromUserName);
 						} else {
-							$('#txtTo').val(messObj.toUserName);
+							$('#txtTo').val(messData.toUserName);
 						}
 						$('#txtTo').attr("disabled", "disabled");
+						$('#page-messages').data('replyMessData',messData);
 						$.mobile.navigate('#page-messages');
 					});
 
-					$('#uMessName').text(messObj.name);
-					$('#uMessSub').text(messObj.subject);
-					$('#uMessMessage').text(messObj.message);
 					$('#messageListView').css('display', 'none');
 					$('#message-view').css('display', 'block');
-
-					$.ajax({
-						url : hostUrl.concat("/messages/" + messObj.id + "?access_token=" + window.bearerToken),
-						type : 'PUT',
-						data : {
-							'status' : '1'
-						}
-					}).done(function () {
-						_self.getMessageMeeting();
-						console.log("Message status updated");
-
-					});
-
 				}
 			});
+			
+			$.each(_self.messages, function(index){
+				var obj =this[this.length - 1];
+				if (obj.fromUserName !== null) {
+					if (obj.fromStatus !== -1) {
+						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.fromUserName + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 
-			for (var i in _self.messages) {
+						that.$messagelistItem = $('#' + obj.id);
+						that.$messagelistItem.data('messData', obj);
+						$.ajax({
+							url : hostUrl + "/profilePic/" + obj.fromUserName,
+							type : 'GET',
+							context : that.$messagelistItem,
+							async : true
+						}).done(function (dataURL) {
+							if (dataURL) {
+								$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+							}
+						});
+					}
+				}
+				if (obj.toUserName !== null) {
+					if (obj.toStatus !== -1) {
+						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.toUserName + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='semtIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
+
+						that.$messagelistItem = $('#' + obj.id);
+						that.$messagelistItem.data('messData', obj);
+						$.ajax({
+							url : hostUrl + "/profilePic/" + obj.toUserName,
+							type : 'GET',
+							context : that.$messagelistItem,
+							async : true
+						}).done(function (dataURL) {
+							if (dataURL) {
+								$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+							}
+						});
+					}
+				}
+				
+			});
+			/*for (var i in _self.messages) {
 				var obj = _self.messages[i];
 				if (obj.fromUserName !== null) {
 					if (obj.fromStatus !== -1) {
@@ -1116,27 +1179,27 @@ var Controller = function () {
 					}
 				}
 
-			}
+			}*/
 		},
 
 		getMessageMeeting : function () {
-			var newMessCount = 0,
-			newMeetCount = 0;
+			//var newMessCount = 0,
+			var newMeetCount = 0;
 			$.ajax({
 				url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 				type : 'GET',
 				async : true
 			}).done(function (message) {
-				_self.messages = message;
-				_self.messages.sort(function (a, b) {
-					return parseInt(a.toStatus) - parseInt(b.toStatus)
-				});
-				for (var i = 0; i < _self.messages.length; i++) {
-					var obj = _self.messages[i];
-					if (obj.fromUserName !== null && obj.toStatus === 0) {
+				_self.messages = _self.parseMessages(message);
+				var newMessCount = 0;
+				$.each(_self.messages, function(index){
+					var obj = this[this.length - 1];
+					
+					if (obj && obj.fromUserName !== null && obj.toStatus === 0) {
 						newMessCount++;
 					}
-				}
+				});
+				
 				if (newMessCount > 0) {
 					$('#messCount').text(newMessCount);
 					$('#messCount').removeClass('display');
@@ -1183,7 +1246,20 @@ var Controller = function () {
 				}
 			});
 		},
-
+		
+		parseMessages: function(message){
+			var arrMess = {};
+			for(var i=0; i < message.length; i++){
+				if(message[i].topicId === -1){
+					arrMess[message[i].id] = [];
+					arrMess[message[i].id].push(message[i]);
+				} else {
+					arrMess[message[i].topicId].push(message[i]);
+				}
+			}
+			return arrMess;
+		},
+		
 		feedback : function () {
 			var that = this;
 			this.$feedbackpage = $("#page-feedback");

@@ -289,7 +289,7 @@
 			</div>
 			<div role="main" class="ui-content wrap">
 				<input id="txtTo" type="text" placeholder="To">
-				<input id="txtSubject" type="text" placeholder="Subject">
+				<!--<input id="txtSubject" type="text" placeholder="Subject">-->
 				<textarea id="taMessage" placeholder="Messsage" rows="5" cols="30" data-autogrow="false"></textarea>
 				<a id="btnSendMessage" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send Message</a>
 			</div>
@@ -309,8 +309,11 @@
 					</div>
 					<div class="msgBox">
 						<p id="uMessName" class="senderName"></p> 
-						<p id="uMessSub" class="subject"> </p>
-						<p id="uMessMessage" class="message"></p>
+						<!--<p id="uMessSub" class="subject"> </p>-->
+						<ul id="messViewList" class="messageList">
+						
+						</ul>
+						<!--<p id="uMessMessage" class="message"></p>-->
 					</div>
 					<a id="btnReplyMessage" data-role="button" class="button btnReplyMessage" data-transition="slide" data-direction="forward">Reply</a>
 				</div>

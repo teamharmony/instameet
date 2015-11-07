@@ -870,3 +870,7 @@ padding: 6px;
 .msgBox .subject, .msgBox .agenda, .msgBox .skills { border-bottom:1px dotted #5C94B8; font-size:13px; font-style:italic; color:#ccc; }
 .msgBox .datetime, .msgBox .venue, .msgBox .distances { border-bottom:1px dotted #5C94B8; font-size:12px; color:#D4D466; }
 .msgBox .message, .msgBox .desc { font-size:12px; color:#ccc; }
+
+.msgBox .messageList { list-style-type: none; margin: 0; padding: 0; }
+.msgBox .messageList .messageRecieve { padding: 4px 100px 4px 4px; word-wrap: break-word; }
+.msgBox .messageList .messageSent { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word;  }
