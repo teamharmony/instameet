@@ -106,23 +106,23 @@ var Controller = function () {
 				evt.preventDefault();
 			});
 
-			/*$('#btn-gl').off('click');
+			$('#btn-gl').off('click');
 			$('#btn-gl').on('click', function(evt) {
-			openGL.getLoginStatus(function(response) {
-			if (response.status === "connected") {
-			_self.glLogin();
-			} else {
-			openGL.login(function(response) {
-			if (response.status === 'connected') {
-			_self.glLogin();
-			} else {
-			alert('Google login failed: ' + response.error);
-			}
-			}, {scope: 'openid profile email'});
-			}
+				openGL.getLoginStatus(function(response) {
+					if (response.status === "connected") {
+						_self.glLogin();
+					} else {
+						openGL.login(function(response) {
+							if (response.status === 'connected') {
+								_self.glLogin();
+							} else {
+								alert('Google login failed: ' + response.error);
+							}
+						}, {scope: 'openid profile email'});
+					}
+				});
+				evt.preventDefault();
 			});
-			evt.preventDefault();
-			});*/
 		},
 
 		clearTimers : function () {
@@ -136,7 +136,27 @@ var Controller = function () {
 				}, 600000);
 		},
 
-		glLogin : function () {},
+		glLogin : function () {
+			function loginSuccess() {
+				_self.updateLocation();
+				_self.getMessageMeeting();
+				_self.setTimers();
+				$.mobile.navigate("#page-home");
+				userLoggedIn = "glAdmin";
+				loginBy = "gl";
+			};
+
+			function refreshTokenFailure() {
+				$.mobile.navigate("#page-welcome");
+			};
+
+			function passwordFailure() {
+				alert('Invalid Username and Password');
+			};
+
+			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
+			authentication.loginWithPassword('glAdmin', 'glAdmin');
+		},
 
 		fbLogin : function () {
 			function loginSuccess() {
@@ -894,7 +914,7 @@ var Controller = function () {
 				var obj = _self.meetings[i];
 				if (obj.fromUserName !== null) {
 					if (obj.fromStatus !== -1) {
-						$meetinglist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.fromUserName + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						$meetinglist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 
 						$meetinglistItem = $('#' + obj.id);
 						$.ajax({
@@ -911,7 +931,7 @@ var Controller = function () {
 				}
 				if (obj.toUserName !== null) {
 					if (obj.toStatus !== -1) {
-						$meetinglist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.toUserName + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
+						$meetinglist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
 
 						$meetinglistItem = $('#' + obj.id);
 						$.ajax({
@@ -1106,7 +1126,7 @@ var Controller = function () {
 				var obj =this[this.length - 1];
 				if (obj.fromUserName !== null) {
 					if (obj.fromStatus !== -1) {
-						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.fromUserName + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 
 						that.$messagelistItem = $('#' + obj.id);
 						that.$messagelistItem.data('messData', obj);
@@ -1124,7 +1144,7 @@ var Controller = function () {
 				}
 				if (obj.toUserName !== null) {
 					if (obj.toStatus !== -1) {
-						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.toUserName + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='semtIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
+						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='semtIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
 
 						that.$messagelistItem = $('#' + obj.id);
 						that.$messagelistItem.data('messData', obj);
