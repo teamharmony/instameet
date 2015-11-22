@@ -874,3 +874,23 @@ padding: 6px;
 .msgBox .messageList { list-style-type: none; margin: 0; padding: 0; }
 .msgBox .messageList .messageRecieve { padding: 4px 100px 4px 4px; word-wrap: break-word; font-size:12px; color:#ccc;}
 .msgBox .messageList .messageSent { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word; font-size:12px; color:#ccc; }
+
+/*  receive message */
+.msgBox .messageList .messageRecieve,
+.msgBox .messageList .messageSend { 
+	position: relative; 
+	padding: 10px;
+	border-radius:3px;
+	margin-bottom:10px; 
+	white-space: normal;
+  word-wrap: break-word;
+}
+/* send message */
+.msgBox .messageList .messageRecieve { background:#88b7d5; margin-right: 40px; margin-left: 15px;}
+.msgBox .messageList .messageSend {  background:#fff; margin-left: 40px; margin-right: 15px;}
+.msgBox .messageList .messageRecieve:before { 
+	left:-16px; top: 3px; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; 
+		border-color: rgba(136, 183, 213, 0); border-right-color: #88b7d5; border-width: 8px; }
+.msgBox .messageList .messageSend:after { 
+	left: 100%; top: 3px; border: solid transparent; content: " "; height: 0; width: 0; position: absolute;
+		border-color: rgba(136, 183, 213, 0); border-left-color: #fff; border-width: 8px; }

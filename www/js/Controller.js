@@ -1075,7 +1075,7 @@ var Controller = function () {
 						if(messArr[i].fromUserName !== null){
 							this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'</li>');
 						} else {
-							this.$messageViewListItem.append('<li class="messageSent">'+ messArr[i].message +'</li>');
+							this.$messageViewListItem.append('<li class="messageSend">'+ messArr[i].message +'</li>');
 						}
 						
 						$.ajax({
