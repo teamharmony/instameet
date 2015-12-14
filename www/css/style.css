@@ -873,7 +873,7 @@ padding: 6px;
 
 .msgBox .messageList { list-style-type: none; margin: 0; padding: 0; }
 .msgBox .messageList .messageRecieve { padding: 4px 100px 4px 4px; word-wrap: break-word; font-size:12px; color:#ccc;}
-.msgBox .messageList .messageSent { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word; font-size:12px; color:#ccc; }
+.msgBox .messageList .messageSend { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word; font-size:12px; color:#ccc; }
 
 /*  receive message */
 .msgBox .messageList .messageRecieve,

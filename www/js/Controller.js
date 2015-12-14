@@ -1,12 +1,13 @@
 var Controller = function () {
-	var hostUrl = "http://localhost:8080/ResourceMgmt",
+	var hostUrl = "http://vps.hilfe.website:8080/ResourceMgmt",
+	//var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
 	userLoggedIn,
 	loginBy = "normal",
 	locationTimer,
 	messageMeetingTime,
 	meetingTimers = [];
-//"http://gazidevworks.org:8080/ResourceMgmt",
+
 	var controller = {
 
 		_self : null,
@@ -88,6 +89,7 @@ var Controller = function () {
 
 			$('#btn-fb').off('click');
 			$('#btn-fb').on('click', function (evt) {
+				_self.loading('show');
 				openFB.getLoginStatus(function (response) {
 					if (response.status === "connected") {
 						_self.fbLogin();
@@ -159,27 +161,89 @@ var Controller = function () {
 		},
 
 		fbLogin : function () {
+			//data = { 'email':'lokesh.zopay88@gmail.com', 'name': 'LOkesh ZOpay'};
+			//_self.checkIfSocialUserExist(data);
+			openFB.api({
+				path: '/me',
+				success: function (data) {
+					_self.checkIfSocialUserExist(data);
+				},
+				error: function (error) {
+					console.log(error.message);
+				}
+			});
+		},
+		
+		checkIfSocialUserExist: function(data){
+			var that = this;
+			this.socialData = data;
+				
+			$.ajax({
+				url : hostUrl + "/validate/username",
+				type : 'POST',
+				data : "username=" + data.email,
+				processData : false,
+				contentType : "application/x-www-form-urlencoded"
+			}).done(function (data) {
+				if (data === 1) {
+					_self.processSocialLogin(that.socialData);
+				} else {
+					_self.registerSocialUser(that.socialData);
+				}
+			});
+		},
+		
+		registerSocialUser: function(data){
+			var that = this, formData = new FormData();
+			this.data = data;
+						
+			formData.append('name', data.name);
+			formData.append('email', 'fbUser@gmail.com');
+			formData.append('password','fbUser');
+			formData.append('skills', '');
+			formData.append('username', data.email);
+			formData.append('contact', '');
+			formData.append('visible', '1');
+			
+			$.ajax({
+				url : hostUrl + "/resources",
+				type : 'POST',
+				data : formData,
+				processData : false,
+				contentType : false
+			}).done(function (data) {
+				_self.loading('hide');
+				_self.processSocialLogin(that.data);
+			}).fail(function (jqXHR, textStatus, errorThrown) {
+				_self.loading('hide');
+			});
+		},
+		
+		processSocialLogin: function(data){
 			function loginSuccess() {
 				_self.updateLocation();
 				_self.getMessageMeeting();
 				_self.setTimers();
 				$.mobile.navigate("#page-home");
-				userLoggedIn = "adminfb";
+				userLoggedIn = data.username;
 				loginBy = "fb";
+				_self.loading('show');
 			};
 
 			function refreshTokenFailure() {
+				_self.loading('hide');
 				$.mobile.navigate("#page-welcome");
 			};
 
 			function passwordFailure() {
+				_self.loading('hide');
 				alert('Invalid Username and Password');
 			};
 
 			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
-			authentication.loginWithPassword('adminfb', 'adminfb');
+			authentication.loginWithPassword(data.email, 'fbUser');
 		},
-
+		
 		login : function () {
 			this.$login = $("#page-login");
 			$('#userId', this.$login).val("");
@@ -550,9 +614,13 @@ var Controller = function () {
 				}
 			});
 			_self.loading("show");
-			map.init(_self.onMapSuccess);
+			map.init(_self.onMapSuccess, _self.markerClickHandler);
 		},
-
+		
+		markerClickHandler: function(data){
+			_self.showProfile(data);
+		},
+		
 		onMapSuccess : function (lat, lng) {
 			var obj = map.getLatLongRange(lat, lng);
 			$.ajax({
@@ -561,9 +629,9 @@ var Controller = function () {
 				data : obj
 			}).done(function (user) {
 				if (user.length > 0) {
-					map.showOnMap(user);
+					map.showOnMap(user, userLoggedIn);
 					_self.renderListView(user);
-				} else {}
+				}
 				_self.loading("hide");
 			});
 
@@ -607,7 +675,7 @@ var Controller = function () {
 				type : 'GET'
 			}).done(function (user) {
 				if (user.length > 0) {
-					map.showOnMap(user);
+					map.showOnMap(user, userLoggedIn);
 					_self.renderListView(user);
 				} else {
 					alert("No result found for current search criteria.");
@@ -623,7 +691,7 @@ var Controller = function () {
 				type : 'GET'
 			}).done(function (user) {
 				if (user.length > 0) {
-					map.showOnMap(user);
+					map.showOnMap(user, userLoggedIn);
 					_self.renderListView(user);
 				} else {
 					alert("No result found for current search criteria.");
@@ -642,7 +710,7 @@ var Controller = function () {
 					data : obj
 				}).done(function (user) {
 					if (user.length > 0) {
-						map.showOnMap(user);
+						map.showOnMap(user, userLoggedIn);
 						_self.renderListView(user);
 					} else {
 						alert("No result found for current search criteria.");
@@ -689,17 +757,17 @@ var Controller = function () {
 			$list.off('click', 'li', _self.onListClick);
 			$list.on('click', 'li', _self.onListClick);
 			var count = 0;
-			for (var i in data) {
+			for (var i=0; i < data.length; i++) {
 				var obj = data[i];
 				if (obj.username !== userLoggedIn) {
 					var p1 = map.getLatLng(obj.latitude, obj.longitude);
 					var p2 = map.getLatLng(_self._latlng.latitude, _self._latlng.longitude);
 					var uDist = map.getDistanceFromLatLng(p1, p2);
 
-					$list.append("<li class='listItem' id='" + obj.username + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-skill'>" + obj.skills + " </p><p class='list-miles'>" + uDist + " Miles </p></div></li>");
+					$list.append("<li class='listItem' id='lstItem-" + i + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-skill'>" + obj.skills + " </p><p class='list-miles'>" + uDist + " Miles </p></div></li>");
 
-					$listItem = $('#' + obj.username);
-
+					$listItem = $('#lstItem-' + i);
+					$listItem.data('user', obj);
 					$.ajax({
 						url : hostUrl + "/profilePic/" + obj.username,
 						type : 'GET',
@@ -720,40 +788,15 @@ var Controller = function () {
 			var userInfo = $('#list').data('userInfo');
 			var obj = oEvent.currentTarget;
 			if (obj.tagName === "LI") {
-				this.uName = obj.id;
+				this.user = $('#'+obj.id).data('user');
 				$.each(userInfo, function (index, value) {
-					if (value.username === that.uName) {
+					if (value.username === that.user.username) {
 						uInfo = value;
 						return false;
 					}
 				});
-				var p1 = map.getLatLng(uInfo.latitude, uInfo.longitude);
-				var p2 = map.getLatLng(_self._latlng.latitude, _self._latlng.longitude);
-				var uDist = map.getDistanceFromLatLng(p1, p2);
 
-				$('#imgProfileUser').attr('src', 'img/defaultImg.png');
-				$.ajax({
-					url : hostUrl + "/profilePic/" + uInfo.username,
-					type : 'GET',
-					async : true
-				}).done(function (dataURL) {
-					$('#imgProfileUser').attr('src', 'data:image/png;base64,' + dataURL);
-				});
-
-				$('#txtUName').text(uInfo.name);
-				$('#txtUSkills').text(uInfo.skills);
-				$('#txtUDistance').text(uDist + " miles");
-
-				this.$profilePage = $("#page-profile");
-				this.$uName = $('#txtUName', this.$profilePage);
-
-				$('#txtTo').val(uInfo.username);
-				$('#txtTo').attr("disabled", "disabled");
-
-				$('#txtToMeeting').val(uInfo.username);
-				$('#txtToMeeting').attr("disabled", "disabled");
-
-				_self.showProfile();
+				_self.showProfile(uInfo);
 			}
 		},
 
@@ -766,7 +809,32 @@ var Controller = function () {
 			});
 		},
 
-		showProfile : function () {
+		showProfile : function (uInfo) {
+			var p1 = map.getLatLng(uInfo.latitude, uInfo.longitude);
+			var p2 = map.getLatLng(_self._latlng.latitude, _self._latlng.longitude);
+			var uDist = map.getDistanceFromLatLng(p1, p2);
+
+			$('#imgProfileUser').attr('src', 'img/defaultImg.png');
+			$.ajax({
+				url : hostUrl + "/profilePic/" + uInfo.username,
+				type : 'GET',
+				async : true
+			}).done(function (dataURL) {
+				$('#imgProfileUser').attr('src', 'data:image/png;base64,' + dataURL);
+			});
+
+			$('#txtUName').text(uInfo.name);
+			$('#txtUSkills').text(uInfo.skills);
+			$('#txtUDistance').text(uDist + " miles");
+
+			this.$profilePage = $("#page-profile");
+			this.$uName = $('#txtUName', this.$profilePage);
+
+			$('#txtTo').val(uInfo.username);
+			$('#txtTo').attr("disabled", "disabled");
+
+			$('#txtToMeeting').val(uInfo.username);
+			$('#txtToMeeting').attr("disabled", "disabled");
 			$.mobile.navigate('#page-profile');
 		},
 
@@ -1299,6 +1367,8 @@ var Controller = function () {
 				}).done(function () {
 					_self.loading("hide");
 					alert("Feedback sent successfully.");
+					$('#txtFeedbackSubject').val(''),
+					$('#taFeedbackMessage').val('');
 				}).fail(function () {
 					_self.loading("hide");
 					alert("Feedback could not be send.");

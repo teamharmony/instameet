@@ -7,10 +7,11 @@
 
 var map = {
 	_map: null, _thatMap: null, _markersArray: [],
-	init: function(successCallback){
+	init: function(successCallback, markerClickHandler){
 		_map = null;
 		$('#map-canvas').empty();
 		_thatMap = this;
+		_thatMap.markerClickHandler = markerClickHandler;
 		_thatMap.successCallback = successCallback;
 		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError);
 	},
@@ -47,85 +48,33 @@ var map = {
 		_thatMap.successCallback(lat,lng);
 	},
 	
-	showOnMap: function(users){
+	showOnMap: function(users, userLoggedIn, markerClickCallback){
 		_thatMap.clearMarkers();
 		var bounds = new google.maps.LatLngBounds();
 		var infowindow = new google.maps.InfoWindow();
 		
 		for (var i in users)
 		{
-			var obj = users[i];
-			var latlng = new google.maps.LatLng(obj.latitude, obj.longitude);
-			bounds.extend(latlng);
-			 
-			var marker = new google.maps.Marker({
-				position: latlng,
-				map: _map,
-				data: obj
-			});
-			
-			_thatMap._markersArray.push(marker);
-		 
-			google.maps.event.addListener(marker, 'click', function() {
-				//infowindow.setContent(_thatMap.infoWindowContent(this.data));
-				//infowindow.open(_map, this);				
-			});
-			
-			// *
-			// START INFOWINDOW CUSTOMIZE.
-			// The google.maps.event.addListener() event expects
-			// the creation of the infowindow HTML structure 'domready'
-			// and before the opening of the infowindow, defined styles are applied.
-			// *
-			google.maps.event.addListener(infowindow, 'domready', function() {
-
-				// Reference to the DIV that wraps the bottom of infowindow
-				var iwOuter = $('.gm-style-iw');
-
-				/* Since this div is in a position prior to .gm-div style-iw.
-				 * We use jQuery and create a iwBackground variable,
-				 * and took advantage of the existing reference .gm-style-iw for the previous div with .prev().
-				*/
-				var iwBackground = iwOuter.prev();
-
-				// Removes background shadow DIV
-				iwBackground.children(':nth-child(2)').css({'display' : 'none'});
-
-				// Removes white background DIV
-				iwBackground.children(':nth-child(4)').css({'display' : 'none'});
-
-				// Moves the infowindow 115px to the right.
-				iwOuter.parent().parent().css({left: '115px'});
-				
-				iwOuter.children(':nth-child(1)').css({'display':'block'});
-
-				// Moves the shadow of the arrow 76px to the left margin.
-				iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
-
-				// Moves the arrow 76px to the left margin.
-				iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
-
-				// Changes the desired tail shadow color.
-				iwBackground.children(':nth-child(3)').find('div').children().css({'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px', 'z-index' : '1'});
-
-				// Reference to the div that groups the close button elements.
-				var iwCloseBtn = iwOuter.next();
-
-				// Apply the desired effect to the close button
-				iwCloseBtn.css({width:'13px', height: '13px', opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
-
-				// If the content of infowindow not exceed the set maximum height, then the gradient is removed.
-				if($('.iw-content').height() < 140){
-				  $('.iw-bottom-gradient').css({display: 'none'});
-				}
-
-				// The API automatically applies 0.7 opacity to the button after the mouseout event. This function reverses this event to the desired value.
-				iwCloseBtn.mouseout(function(){
-				  $(this).css({opacity: '1'});
+			if(users[i].username != userLoggedIn){
+				var obj = users[i];
+				var latlng = new google.maps.LatLng(obj.latitude, obj.longitude);
+				bounds.extend(latlng);
+				 
+				var marker = new google.maps.Marker({
+					position: latlng,
+					map: _map,
+					data: obj
 				});
-			});
+				
+				_thatMap._markersArray.push(marker);
+			 
+				google.maps.event.addListener(marker, 'click', jQuery.proxy(function() {
+					_thatMap.markerClickHandler(this);
+					//infowindow.setContent(_thatMap.infoWindowContent(this.data));
+					//infowindow.open(_map, this);				
+				}, obj));
+			}
 		}
-
 		_map.fitBounds(bounds);
 	},
 	

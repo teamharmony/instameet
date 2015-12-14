@@ -10,20 +10,21 @@
 var openFB = (function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
-            FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
-            // By default we store fbtoken in sessionStorage. This can be overridden in init()
-            tokenStore = window.sessionStorage,
-            fbAppId,
-            baseURL = "http://localhost:8081/instameet/www",
-            oauthRedirectURL = baseURL + '/oauthcallback.html',
-            logoutRedirectURL = baseURL + '/logoutcallback.html',
-            // Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
-            // inside the module instead of keeping it local within the login function.
-            loginCallback,
-            // Indicates if the app is running inside Cordova
-            runningInCordova,
-            // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-            loginProcessed;
+		FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
+		// By default we store fbtoken in sessionStorage. This can be overridden in init()
+		tokenStore = window.sessionStorage,
+		fbAppId,
+		baseURL = "http://localhost:8100",
+		// baseURL = "http://localhost:8081/instameet/www",
+		oauthRedirectURL = baseURL + '/oauthcallback.html',
+		logoutRedirectURL = baseURL + '/logoutcallback.html',
+		// Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
+		// inside the module instead of keeping it local within the login function.
+		loginCallback,
+		// Indicates if the app is running inside Cordova
+		runningInCordova,
+		// Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
+		loginProcessed;
 
     console.log(oauthRedirectURL);
     console.log(logoutRedirectURL);

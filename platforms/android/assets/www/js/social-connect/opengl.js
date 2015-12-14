@@ -10,20 +10,21 @@
 var openGL = (function () {
 
     var GL_LOGIN_URL = 'https://accounts.google.com/o/oauth2/auth',
-            GL_LOGOUT_URL = 'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout',
-            // By default we store gltoken in sessionStorage. This can be overridden in init()
-            tokenStore = window.sessionStorage,
-            glAppId,
-            baseURL = "http://localhost:8081/instameet/www",
-            oauthRedirectURL = baseURL + '/oauthcallback.html',
-            logoutRedirectURL = baseURL + '/logoutcallback.html',
-            // Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
-            // inside the module instead of keeping it local within the login function.
-            loginCallback,
-            // Indicates if the app is running inside Cordova
-            runningInCordova,
-            // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-            loginProcessed;
+		GL_LOGOUT_URL = 'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout',
+		// By default we store gltoken in sessionStorage. This can be overridden in init()
+		tokenStore = window.sessionStorage,
+		glAppId,
+		baseURL = "http://localhost:8100/",
+		//baseURL = "http://localhost:8081/instameet/www",
+		oauthRedirectURL = baseURL + '/oauthcallback.html',
+		logoutRedirectURL = baseURL + '/logoutcallback.html',
+		// Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
+		// inside the module instead of keeping it local within the login function.
+		loginCallback,
+		// Indicates if the app is running inside Cordova
+		runningInCordova,
+		// Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
+		loginProcessed;
 
     console.log(oauthRedirectURL);
     console.log(logoutRedirectURL);
