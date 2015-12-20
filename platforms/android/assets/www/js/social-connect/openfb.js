@@ -15,7 +15,7 @@ var openFB = (function () {
 		tokenStore = window.sessionStorage,
 		fbAppId,
 		baseURL = "http://localhost:8100",
-		// baseURL = "http://localhost:8081/instameet/www",
+		//baseURL = "http://localhost:8081/instameet/www",
 		oauthRedirectURL = baseURL + '/oauthcallback.html',
 		logoutRedirectURL = baseURL + '/logoutcallback.html',
 		// Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
@@ -59,6 +59,7 @@ var openFB = (function () {
     function getLoginStatus(callback) {
         var token = tokenStore['fbtoken'],
                 loginStatus = {};
+		console.log(token);
         if (token) {
             loginStatus.status = 'connected';
             loginStatus.authResponse = {token: token};
@@ -106,7 +107,7 @@ var openFB = (function () {
         function loginWindow_exitHandler() {
             console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
-            deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
+            //deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
             loginWindow.removeEventListener('loadstop', loginWindow_loadStartHandler);
             loginWindow.removeEventListener('exit', loginWindow_exitHandler);
             loginWindow = null;
@@ -193,12 +194,10 @@ var openFB = (function () {
 //                }, 3000);
 //            }
 //        }
-
-        var logoutStatus = {};
-		
+        var logoutStatus = {};		
         if (token) {
-           
             logoutStatus.status = 'success';
+			console.log(FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no');
             logoutWindow = window.open(FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no');
 			tokenStore.removeItem('fbtoken');
             if (runningInCordova) {			

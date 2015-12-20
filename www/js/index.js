@@ -28,7 +28,7 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
-		this.onDeviceReady();
+		//this.onDeviceReady();
     },
     // deviceready Event Handler
     //
@@ -66,7 +66,7 @@ var app = {
                 navigator.notification.alert(
                     message,    // message
                     null,       // callback
-                    "InstaPal", // title
+                    "InstaMeet", // title
                     'OK'        // buttonName
                 );
             };

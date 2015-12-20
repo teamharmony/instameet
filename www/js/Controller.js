@@ -25,7 +25,7 @@ var Controller = function () {
 			});
 
 			$(document).delegate("#page-edit", "pagebeforeshow", function () {
-				_self.editView();
+				_self.edit();
 			});
 
 			$(document).delegate("#page-signup", "pagebeforeshow", function () {
@@ -43,10 +43,6 @@ var Controller = function () {
 			$(document).delegate("#page-home", "pagebeforeshow", function () {
 				_self.homeview();
 			});
-
-			/*$(document).delegate("#page-profile", "pagebeforeshow", function () {
-			_self.profile();
-			});*/
 
 			$(document).delegate("#page-messages", "pagebeforeshow", function (e, data) {
 				_self.message(e, data);
@@ -70,11 +66,22 @@ var Controller = function () {
 		},
 
 		bindEvents : function () {
-			//document.addEventListener("backbutton", _self.backButtonHandler, false);
+			document.addEventListener("backbutton", _self.backButtonHandler, false);
 		},
 
 		backButtonHandler : function (event) {
-			alert('Back button pressed');
+			if($.mobile.activePage.is('#page-welcome')){
+				/* 
+				 Event preventDefault/stopPropagation not required as adding backbutton
+				  listener itself override the default behaviour. Refer below PhoneGap link.
+				*/
+				//e.preventDefault();
+				navigator.app.exitApp();
+			} else if($.mobile.activePage.is('#page-home')){
+				_self.onLogoutClickHandler();
+			} else {
+				navigator.app.backHistory();
+			}
 		},
 
 		welcome : function () {
@@ -127,10 +134,6 @@ var Controller = function () {
 			});
 		},
 
-		clearTimers : function () {
-			clearInterval(timer);
-		},
-
 		setTimers : function () {
 			timer = setInterval(function () {
 					_self.updateLocation();
@@ -161,8 +164,6 @@ var Controller = function () {
 		},
 
 		fbLogin : function () {
-			//data = { 'email':'lokesh.zopay88@gmail.com', 'name': 'LOkesh ZOpay'};
-			//_self.checkIfSocialUserExist(data);
 			openFB.api({
 				path: '/me',
 				success: function (data) {
@@ -198,7 +199,7 @@ var Controller = function () {
 			this.data = data;
 						
 			formData.append('name', data.name);
-			formData.append('email', 'fbUser@gmail.com');
+			formData.append('email', data.email+'_'+new Date().getTime());
 			formData.append('password','fbUser');
 			formData.append('skills', '');
 			formData.append('username', data.email);
@@ -212,7 +213,6 @@ var Controller = function () {
 				processData : false,
 				contentType : false
 			}).done(function (data) {
-				_self.loading('hide');
 				_self.processSocialLogin(that.data);
 			}).fail(function (jqXHR, textStatus, errorThrown) {
 				_self.loading('hide');
@@ -220,14 +220,15 @@ var Controller = function () {
 		},
 		
 		processSocialLogin: function(data){
+			var that = this;
+			this.data = data;
 			function loginSuccess() {
 				_self.updateLocation();
 				_self.getMessageMeeting();
 				_self.setTimers();
 				$.mobile.navigate("#page-home");
-				userLoggedIn = data.username;
+				userLoggedIn = that.data.email;
 				loginBy = "fb";
-				_self.loading('show');
 			};
 
 			function refreshTokenFailure() {
@@ -279,24 +280,44 @@ var Controller = function () {
 			});
 		},
 
-		onLogout : function () {
-			if (loginBy === "normal") {
-				$.ajax({
-					url : hostUrl.concat("/logout?access_token=" + window.bearerToken),
-					type : 'GET'
-				}).done(function () {
-					$.mobile.navigate('#page-welcome');
-				});
-			} else if (loginBy === "fb") {
-				openFB.logout(function () {
-					$.mobile.navigate('#page-welcome');
-				});
+		onLogoutClickHandler : function () {
+			function onConfirm(button){
+				if(button === 1){	
+					_self.loading('show');
+					$.ajax({
+						url : hostUrl.concat("/logout?access_token=" + window.bearerToken),
+						type : 'GET'
+					}).done(function () {
+						_self.loading('hide');
+						if (loginBy === "fb") {
+							openFB.logout(function () {
+								_self.clearAll();
+								$.mobile.navigate('#page-welcome');
+							});
+						} else {
+							_self.clearAll();
+							$.mobile.navigate('#page-welcome');
+						}
+					});
+				}
 			}
-			_self.clearTimers();
+			navigator.notification.confirm(
+				'Are you sure you want to logout?',  // message
+				onConfirm,              // callback to invoke with index of button pressed
+				'Logout',            // title
+				['Yes','No']          // buttonLabels
+			);
+		},
+		
+		clearAll: function(){
+			clearInterval(timer);
+			for (var i = 0; i < meetingTimers.length; i++) {
+				clearTimeout(meetingTimers[i]);
+			}
 			window.bearerToken = null;
 			window.refresh_token = null;
 		},
-
+		
 		isResetPassRequired : function () {
 			$.ajax({
 				url : hostUrl.concat("/password/reset?access_token=" + window.bearerToken),
@@ -378,197 +399,6 @@ var Controller = function () {
 			});
 		},
 
-		validateEmail : function (email) {
-			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-			return re.test(email);
-		},
-
-		signup : function () {
-			_self.drawCaptcha();
-			var that = this;
-			this.$signUp = $('#page-signup');
-			this.$name = $('#name', this.$signUp);
-			this.$skills = $('#skills', this.$signUp);
-			this.$contact = $('#contact', this.$signUp);
-			this.$username = $('#username', this.$signUp);
-			this.$error = $('#error', this.$signUp);
-			this.$email = $('#email', this.$signUp);
-			this.$pass = $('#password', this.$signUp);
-			this.$confirmPass = $('#confirmPass', this.$signUp);
-			this.$txtCaptcha = $('#captcha', this.$signUp);
-			this.$btnUpload = $("#btnUpload", this.$signUp);
-			this.$imgDisp = $("imgDisp", this.$signUp);
-
-			this.$name.val("");
-			this.$skills.val("");
-			this.$contact.val("");
-			this.$username.val("");
-			this.$email.val("");
-			this.$pass.val("");
-			this.$confirmPass.val("");
-			this.$pass.val("");
-			this.$txtCaptcha.val("");
-			this.$imgDisp.attr('src', '');
-
-			$("#registrationscreenpart1").show();
-			$("#registrationscreenpart2").hide();
-
-			this.$username.off('focusout');
-			this.$username.on('focusout', function (e) {
-				that.$username.removeClass('invalidInp');
-				$.ajax({
-					url : hostUrl + "/validate/username",
-					type : 'POST',
-					data : "username=" + that.$username.val(),
-					processData : false,
-					contentType : "application/x-www-form-urlencoded"
-				}).done(function (data) {
-					if (data === 1) {
-						that.$username.addClass('invalidInp');
-						that.$error.text("Invalid Username.");
-						that.$error.removeClass('display');
-					} else {
-						that.$username.removeClass('invalidInp');
-						that.$error.text("");
-						that.$error.addClass('display');
-					}
-				}).fail(function (jqXHR, textStatus, errorThrown) {
-					//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
-					//alert(jqXHR.responseText);
-				});
-				e.preventDefault();
-			});
-
-			this.$email.off('focusout');
-			this.$email.on('focusout', function (e) {
-				that.$email.removeClass('invalidInp');
-				if (!_self.validateEmail(that.$email.val())) {
-					that.$email.addClass('invalidInp');
-					that.$error.text("Invalid Email.");
-					that.$error.removeClass('display');
-				} else {
-					$.ajax({
-						url : hostUrl + "/validate/email",
-						type : 'POST',
-						data : "email=" + that.$email.val(),
-						processData : false,
-						contentType : "application/x-www-form-urlencoded"
-					}).done(function (data) {
-						if (data === 1) {
-							that.$email.addClass('invalidInp');
-							that.$error.text("Invalid Email.");
-							that.$error.removeClass('display');
-						} else {
-							that.$email.removeClass('invalidInp');
-							that.$error.text("");
-							that.$error.addClass('display');
-						}
-					}).fail(function (jqXHR, textStatus, errorThrown) {
-						//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
-						//alert(jqXHR.responseText);
-					});
-				}
-				e.preventDefault();
-
-			});
-
-			$('#captcha').off("focusout", _self.validateCaptcha);
-			$('#captcha').on("focusout", _self.validateCaptcha);
-
-			that.pic = null;
-			this.$btnUpload.off('click');
-			this.$btnUpload.on('click', function (event) {
-				navigator.camera.getPicture(onCapturePhotoSuccess, onCapturePhotoError, {
-					destinationType : navigator.camera.DestinationType.FILE_URI,
-					sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY
-				});
-
-				function onCapturePhotoSuccess(imageData) {
-					window.resolveLocalFileSystemURI(imageData, gotFileEntry, failSystem);
-				}
-
-				function gotFileEntry(fileEntry) {
-					//convert all file to base64 formats
-					fileEntry.file(function (file) {
-						var reader = new FileReader();
-						reader.onloadend = function (evt) {
-							$('#imgDisp').attr('src', evt.target.result);
-
-							that.pic = _self.dataURItoBlob(evt.target.result);
-						};
-						reader.readAsDataURL(file);
-					}, function (message) {
-						alert('Failed because: ' + message);
-					});
-				}
-
-				function failSystem() {
-					alert('failed');
-				}
-
-				function onCapturePhotoError(message) {
-					alert('Captured Failed because: ' + message);
-				}
-
-				event.preventDefault();
-			});
-
-			$('#regVisible').off('change');
-			$('#regVisible').on('change', function () {
-				var bol = $("#regVisible").is(":checked") ? 1 : 0;
-				$('#regVisible').val(bol);
-			});
-
-			$('#btnContinue').off('click');
-			$('#btnContinue').on("click", function (e) {
-				if (that.$name.val() != "" && that.$skills.val() != "" && that.$contact.val() != "") {
-					$("#registrationscreenpart1").hide();
-					$("#registrationscreenpart2").show();
-				} else {
-					alert("Name, skills and contact can not be empty.");
-				}
-				e.preventDefault();
-			});
-
-			$('#btnRegSubmit').off('click');
-			$('#btnRegSubmit').on('click', function (e) {
-				if (that.$pass.val() !== that.$confirmPass.val()) {
-					alert("Password and Confirm Password needs to be same.");
-				} else if (that.$username.val() != "" && that.$email.val() != "" && that.$pass.val() != "" && that.$confirmPass.val() != "") {
-					_self.loading('show');
-					var formData = new FormData($("#form-register")[0]);
-					if (that.pic !== null) {
-						formData.append('profilePic', that.pic);
-					}
-
-					$.ajax({
-						url : hostUrl + "/resources",
-						type : 'POST',
-						data : formData,
-						processData : false,
-						contentType : false
-					}).done(function (data) {
-						_self.loading('hide');
-						//_self.updateLocation();
-						$.mobile.navigate('#page-login');
-					}).fail(function (jqXHR, textStatus, errorThrown) {
-						_self.loading('hide');
-						alert("Could not register user. Please contact your administrator.");
-						//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
-						//alert(jqXHR.responseText);
-					});
-				} else {
-					alert("Username, email and password can not be empty.");
-				}
-				e.preventDefault();
-			});
-		},
-
-		loading : function (showOrHide) {
-			setTimeout(function () {
-				$.mobile.loading(showOrHide);
-			}, 1);
-		},
 		onLocationError : function (error) {
 			//alert(error.code);
 		},
@@ -594,24 +424,16 @@ var Controller = function () {
 		},
 
 		homeview : function () {
-			if (loginBy === "fb") {
-				$('#btnEditProfile').css('display', 'none');
-			} else {
-				$('#btnEditProfile').css('display', 'block');
-			}
-
+			
 			$('#btnSearch').off('click', _self.onSearchClick);
 			$('#btnSearch').on('click', _self.onSearchClick);
 
-			$('#btnLogout').off('click', _self.onLogout);
-			$('#btnLogout').on('click', _self.onLogout);
+			$('#btnLogout').off('click', _self.onLogoutClickHandler);
+			$('#btnLogout').on('click', _self.onLogoutClickHandler);
 
 			$('#btnEditProfile').off('click');
 			$('#btnEditProfile').on('click', function (e) {
-				if (loginBy === "fb") {}
-				else {
-					$.mobile.navigate('#page-edit');
-				}
+				$.mobile.navigate('#page-edit');
 			});
 			_self.loading("show");
 			map.init(_self.onMapSuccess, _self.markerClickHandler);
@@ -1377,7 +1199,7 @@ var Controller = function () {
 			});
 		},
 
-		editView : function () {
+		edit : function () {
 			this.$editpage = $("#page-edit");
 			var that = this;
 			$('#btnCancel', this.$editpage).off('click');
@@ -1490,6 +1312,187 @@ var Controller = function () {
 			});
 		},
 
+		signup : function () {
+			_self.drawCaptcha();
+			var that = this;
+			this.$signUp = $('#page-signup');
+			this.$name = $('#name', this.$signUp);
+			this.$skills = $('#skills', this.$signUp);
+			this.$contact = $('#contact', this.$signUp);
+			this.$username = $('#username', this.$signUp);
+			this.$error = $('#error', this.$signUp);
+			this.$email = $('#email', this.$signUp);
+			this.$pass = $('#password', this.$signUp);
+			this.$confirmPass = $('#confirmPass', this.$signUp);
+			this.$txtCaptcha = $('#captcha', this.$signUp);
+			this.$btnUpload = $("#btnUpload", this.$signUp);
+			this.$imgDisp = $("imgDisp", this.$signUp);
+
+			this.$name.val("");
+			this.$skills.val("");
+			this.$contact.val("");
+			this.$username.val("");
+			this.$email.val("");
+			this.$pass.val("");
+			this.$confirmPass.val("");
+			this.$pass.val("");
+			this.$txtCaptcha.val("");
+			this.$imgDisp.attr('src', '');
+
+			$("#registrationscreenpart1").show();
+			$("#registrationscreenpart2").hide();
+
+			this.$username.off('focusout');
+			this.$username.on('focusout', function (e) {
+				that.$username.removeClass('invalidInp');
+				$.ajax({
+					url : hostUrl + "/validate/username",
+					type : 'POST',
+					data : "username=" + that.$username.val(),
+					processData : false,
+					contentType : "application/x-www-form-urlencoded"
+				}).done(function (data) {
+					if (data === 1) {
+						that.$username.addClass('invalidInp');
+						that.$error.text("Invalid Username.");
+						that.$error.removeClass('display');
+					} else {
+						that.$username.removeClass('invalidInp');
+						that.$error.text("");
+						that.$error.addClass('display');
+					}
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
+					//alert(jqXHR.responseText);
+				});
+				e.preventDefault();
+			});
+
+			this.$email.off('focusout');
+			this.$email.on('focusout', function (e) {
+				that.$email.removeClass('invalidInp');
+				if (!_self.validateEmail(that.$email.val())) {
+					that.$email.addClass('invalidInp');
+					that.$error.text("Invalid Email.");
+					that.$error.removeClass('display');
+				} else {
+					$.ajax({
+						url : hostUrl + "/validate/email",
+						type : 'POST',
+						data : "email=" + that.$email.val(),
+						processData : false,
+						contentType : "application/x-www-form-urlencoded"
+					}).done(function (data) {
+						if (data === 1) {
+							that.$email.addClass('invalidInp');
+							that.$error.text("Invalid Email.");
+							that.$error.removeClass('display');
+						} else {
+							that.$email.removeClass('invalidInp');
+							that.$error.text("");
+							that.$error.addClass('display');
+						}
+					}).fail(function (jqXHR, textStatus, errorThrown) {
+						//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
+						//alert(jqXHR.responseText);
+					});
+				}
+				e.preventDefault();
+
+			});
+
+			$('#captcha').off("focusout", _self.validateCaptcha);
+			$('#captcha').on("focusout", _self.validateCaptcha);
+
+			that.pic = null;
+			this.$btnUpload.off('click');
+			this.$btnUpload.on('click', function (event) {
+				navigator.camera.getPicture(onCapturePhotoSuccess, onCapturePhotoError, {
+					destinationType : navigator.camera.DestinationType.FILE_URI,
+					sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY
+				});
+
+				function onCapturePhotoSuccess(imageData) {
+					window.resolveLocalFileSystemURI(imageData, gotFileEntry, failSystem);
+				}
+
+				function gotFileEntry(fileEntry) {
+					//convert all file to base64 formats
+					fileEntry.file(function (file) {
+						var reader = new FileReader();
+						reader.onloadend = function (evt) {
+							$('#imgDisp').attr('src', evt.target.result);
+
+							that.pic = _self.dataURItoBlob(evt.target.result);
+						};
+						reader.readAsDataURL(file);
+					}, function (message) {
+						alert('Failed because: ' + message);
+					});
+				}
+
+				function failSystem() {
+					alert('failed');
+				}
+
+				function onCapturePhotoError(message) {
+					alert('Captured Failed because: ' + message);
+				}
+
+				event.preventDefault();
+			});
+
+			$('#regVisible').off('change');
+			$('#regVisible').on('change', function () {
+				var bol = $("#regVisible").is(":checked") ? 1 : 0;
+				$('#regVisible').val(bol);
+			});
+
+			$('#btnContinue').off('click');
+			$('#btnContinue').on("click", function (e) {
+				if (that.$name.val() != "" && that.$skills.val() != "" && that.$contact.val() != "") {
+					$("#registrationscreenpart1").hide();
+					$("#registrationscreenpart2").show();
+				} else {
+					alert("Name, skills and contact can not be empty.");
+				}
+				e.preventDefault();
+			});
+
+			$('#btnRegSubmit').off('click');
+			$('#btnRegSubmit').on('click', function (e) {
+				if (that.$pass.val() !== that.$confirmPass.val()) {
+					alert("Password and Confirm Password needs to be same.");
+				} else if (that.$username.val() != "" && that.$email.val() != "" && that.$pass.val() != "" && that.$confirmPass.val() != "") {
+					_self.loading('show');
+					var formData = new FormData($("#form-register")[0]);
+					if (that.pic !== null) {
+						formData.append('profilePic', that.pic);
+					}
+
+					$.ajax({
+						url : hostUrl + "/resources",
+						type : 'POST',
+						data : formData,
+						processData : false,
+						contentType : false
+					}).done(function (data) {
+						_self.loading('hide');
+						//_self.updateLocation();
+						$.mobile.navigate('#page-login');
+					}).fail(function (jqXHR, textStatus, errorThrown) {
+						_self.loading('hide');
+						alert("Could not register user. Please contact your administrator.");
+						//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
+						//alert(jqXHR.responseText);
+					});
+				} else {
+					alert("Username, email and password can not be empty.");
+				}
+				e.preventDefault();
+			});
+		},
+		
 		drawCaptcha : function () {
 			var a = Math.floor(Math.random() * 10) + '';
 			var b = Math.floor(Math.random() * 10) + '';
@@ -1501,7 +1504,7 @@ var Controller = function () {
 			var code = a + ' ' + b + ' ' + ' ' + c + ' ' + d + ' ' + e + ' ' + f;
 			document.getElementById("txtCaptcha").value = code;
 		},
-
+		
 		validateCaptcha : function () {
 			function removeSpaces(string) {
 				return string.split(' ').join('');
@@ -1511,7 +1514,17 @@ var Controller = function () {
 			if (str1 == str2)
 				return true;
 		},
-
+		
+		validateEmail : function (email) {
+			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			return re.test(email);
+		},
+		loading : function (showOrHide) {
+			setTimeout(function () {
+				$.mobile.loading(showOrHide);
+			}, 1);
+		},
+		
 		dataURItoBlob : function (dataURI) {
 			var byteString = atob(dataURI.split(',')[1]);
 

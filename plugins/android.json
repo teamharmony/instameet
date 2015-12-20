@@ -31,6 +31,10 @@
                         {
                             "xml": "<feature name=\"Whitelist\"><param name=\"android-package\" value=\"org.apache.cordova.whitelist.WhitelistPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Notification\"><param name=\"android-package\" value=\"org.apache.cordova.dialogs.Notification\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -89,6 +93,9 @@
             "PACKAGE_NAME": "com.prj.instameet"
         },
         "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-dialogs": {
             "PACKAGE_NAME": "com.prj.instameet"
         }
     },
