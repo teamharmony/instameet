@@ -14,8 +14,8 @@ var openFB = (function () {
 		// By default we store fbtoken in sessionStorage. This can be overridden in init()
 		tokenStore = window.sessionStorage,
 		fbAppId,
-		baseURL = "http://localhost:8100",
-		//baseURL = "http://localhost:8081/instameet/www",
+		//baseURL = "http://localhost:8100",
+		baseURL = "http://localhost:8081/instameet/www",
 		oauthRedirectURL = baseURL + '/oauthcallback.html',
 		logoutRedirectURL = baseURL + '/logoutcallback.html',
 		// Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
@@ -107,7 +107,7 @@ var openFB = (function () {
         function loginWindow_exitHandler() {
             console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
-            //deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
+            deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
             loginWindow.removeEventListener('loadstop', loginWindow_loadStartHandler);
             loginWindow.removeEventListener('exit', loginWindow_exitHandler);
             loginWindow = null;

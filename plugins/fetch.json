@@ -70,5 +70,22 @@
         },
         "is_top_level": true,
         "variables": {}
+    },
+    "de.appplant.cordova.plugin.local-notification": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/katzer/cordova-plugin-local-notifications",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-registerusernotificationsettings": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-registerusernotificationsettings"
+        },
+        "is_top_level": false,
+        "variables": {}
     }
 }

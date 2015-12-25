@@ -66,7 +66,7 @@ var app = {
                 navigator.notification.alert(
                     message,    // message
                     null,       // callback
-                    "InstaPal", // title
+                    "InstaMeet", // title
                     'OK'        // buttonName
                 );
             };
