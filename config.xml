@@ -42,4 +42,6 @@
 	<feature name="Geolocation">
       <param name="android-package" value="org.apache.cordova.GeoBroker" />
 	</feature>
+	
+	<plugin name="de.appplant.cordova.plugin.local-notification" />
 </widget>
