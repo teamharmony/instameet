@@ -784,11 +784,11 @@ flex-shrink: 0;
  }
  .listItem .ltInfoDiv h1.list-name { 
  	font-size:16px;
-	color:#fff;
+	color:#000;
  }
 .listItem .ltInfoDiv p.list-skill, .ltInfoDiv .list-subject, .ltInfoDiv .list-agenda { 
- 	font-size:12px;
-	color:#ccc;
+ 	font-size:13px;
+	color:#333;
  }
  .listItem .ltInfoDiv p.list-miles { 
  	font-size:11px;
@@ -796,7 +796,7 @@ flex-shrink: 0;
  }
 .listView li, .list li {
 	border-bottom: 1px solid #2683C0;
-	padding: 7px 7px 7px 0;
+	padding: 7px 7px 7px 7px;
 }
 .FilterSearch { 
 position:relative;
@@ -814,7 +814,7 @@ position:relative;
 .FilterSearch .ui-select .ui-btn { 
     text-decoration: none;
     color: #ccc;
-		font-size:11px;
+		font-size:12px;
 		line-height:11px;
 }
 .searcharrow { 
@@ -824,13 +824,17 @@ position:relative;
     color: #ccc;
 }
 .messRecieve1 { 
-opacity:0.5;
-background:#10517C;
+/* opacity:0.5; 
+background: rgba(136, 183, 213, 0.8);*/
+background:#88b7d5;
 }
+.messRecieve1 .recieveIcon  { color:red; }
+.messRecieve1 .unReadMessage { font-weight:bold; }
 .messSend {
-    background: #999;
-    opacity: 0.5;
+    background:#fff;
+   /* opacity: 0.5;*/
 }
+.messSend .semtIcon { color: green }
 div#search-choice-listbox {
     min-width: 6em;
 }
@@ -851,6 +855,7 @@ padding: 6px;
     height: 15px;
     text-align: center;
     color: #ccc;
+		font-size:18px;
 }
 .recieveIcon {
     color: #72021c;
@@ -865,21 +870,21 @@ padding: 6px;
 		width:250px;
 }
 .msgBox .senderName, .msgBox .subject, .msgBox .message, .msgBox .agenda, .msgBox .datetime, .msgBox .venue, .msgBox .desc, 
-.msgBox .skills, .msgBox .distances, .msgBox .username { padding:15px 0 2px 0; margin:0 }
+.msgBox .skills, .msgBox .distances, .msgBox .username { padding:15px 0 7px 0; margin:0 }
 .msgBox .senderName, .msgBox .username {  font-size:16px; color:#fff; text-align:center; }
 .msgBox .subject, .msgBox .agenda, .msgBox .skills { border-bottom:1px dotted #5C94B8; font-size:13px; font-style:italic; color:#ccc; }
 .msgBox .datetime, .msgBox .venue, .msgBox .distances { border-bottom:1px dotted #5C94B8; font-size:12px; color:#D4D466; }
 .msgBox .message, .msgBox .desc { font-size:12px; color:#ccc; }
 
 .msgBox .messageList { list-style-type: none; margin: 0; padding: 0; }
-.msgBox .messageList .messageRecieve { padding: 4px 100px 4px 4px; word-wrap: break-word; font-size:12px; color:#ccc;}
-.msgBox .messageList .messageSend { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word; font-size:12px; color:#ccc; }
+.msgBox .messageList .messageRecieve { padding: 4px 100px 4px 4px; word-wrap: break-word; font-size:14px; color:#333;}
+.msgBox .messageList .messageSend { text-align: end; padding: 4px 4px 4px 100px; word-wrap: break-word; font-size:14px; color:#333; }
 
 /*  receive message */
 .msgBox .messageList .messageRecieve,
 .msgBox .messageList .messageSend { 
 	position: relative; 
-	padding: 10px;
+	padding: 15px;
 	border-radius:3px;
 	margin-bottom:10px; 
 	white-space: normal;

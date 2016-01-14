@@ -243,10 +243,11 @@
 				<h1>Meeting Request</h1>
 			</div>
 			<div role="main" class="ui-content wrap">
-				<input id="txtToMeeting" type="text" placeholder="To">
-				<!--<input id="txtSubjectMeeting" type="text" placeholder="MEETING SUBJECT">-->
+				<input id="txtToMeeting" type="hidden" placeholder="To">
+				<input id="txtToNameMeeting" type="text" placeholder="To">
 				<input id="txtAgendaMeeting" type="text" placeholder="Agenda">
-				<input id="txtDatetimeMeeting" type="datetime-local" data-clear-btn="false"  >
+				<input id="txtDatetimeMeeting" type="datetime-local" data-clear-btn="false"  placeholder="yyyy-mm-dd hh:mm a">
+				<p id="errorDT" class="display error">Time needs to be atleast 30 mins later.</p>
 				<input id="txtVenueMeeting" type="text" placeholder="Venue">
 				<textarea id="taDescMeeting" placeholder="Description" rows="5" cols="30" data-autogrow="false"></textarea>
 				<a id="btnSendMeetingReq" data-role="button" class="button btnMeetingRequest" data-transition="slide" data-direction="forward">Send a Request</a>
@@ -288,8 +289,8 @@
 				<h1>Compose Message</h1>
 			</div>
 			<div role="main" class="ui-content wrap">
-				<input id="txtTo" type="text" placeholder="To">
-				<!--<input id="txtSubject" type="text" placeholder="Subject">-->
+				<input id="txtTo" type="hidden" placeholder="To">
+				<input id="txtToName" type="text" placeholder="To">
 				<textarea id="taMessage" placeholder="Messsage" rows="5" cols="30" data-autogrow="false"></textarea>
 				<a id="btnSendMessage" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send Message</a>
 			</div>

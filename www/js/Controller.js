@@ -2,22 +2,34 @@ var Controller = function () {
 	var hostUrl = "http://vps.hilfe.website:8080/ResourceMgmt",
 	//var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
-	userLoggedIn,
-	loginBy = "normal",
-	locationTimer,
-	messageMeetingTime,
-	meetingTimers = [];
+	userLoggedIn;
+	//window.localStorage.instameet_loginBy = "normal";
 
 	var controller = {
-
 		_self : null,
 		_latlng : null,
+		
 		initialize : function () {
 			_self = this;
 			this.bindEvents();
+			_self.checkLogin();
+			
+			openFB.init({
+				appId : '1442578949379728',
+				tokenStore : window.localStorage
+			});
 
-			$(document).delegate("#page-welcome", "pagebeforeshow", function () {
+			openGL.init({
+				appId : '105396803775-7cu06be67flqbt6j9792ikf8rccb7ant.apps.googleusercontent.com',
+				tokenStore : window.localStorage
+			});
+			
+			$(document).delegate("#page-welcome", "pagebeforeshow", function (event, data) {
 				_self.welcome();
+				/*if (data.prevPage.length === 0) {
+					event.preventDefault();
+					_self.checkLogin();
+				}*/
 			});
 
 			$(document).delegate("#page-login", "pagebeforeshow", function () {
@@ -63,19 +75,61 @@ var Controller = function () {
 			$(document).delegate("#page-feedback", "pagebeforeshow", function () {
 				_self.feedback();
 			});
+			
 		},
+		
+		checkLogin : function () {
+			
+			_self.welcome();
+			if (window.localStorage.instameet_loginBy === "normal") {
+				if (window.localStorage.instameet_refresh_token) {
+					_self.directLoginApp("normal");
+				}
+			} else if (window.localStorage.instameet_loginBy === "fb") {
+				openFB.getLoginStatus(function (response) {
+					if (response.status === "connected") {
+						_self.directLoginApp("fb");
+					} else {
+						$.mobile.navigate("#page-welcome");
+					}
+				});
+			} else if (window.localStorage.instameet_loginBy === "gl") {
+				openGL.getLoginStatus(function (response) {
+					if (response.status === "connected") {
+						_self.directLoginApp("gl");
+					} else {
+						$.mobile.navigate("#page-welcome");
+					}
+				});
+			}
+		},
+		
+		directLoginApp : function (loginBy) {
+			function loginSuccess() {
+				$.mobile.navigate('#page-home');
+				window.localStorage.instameet_loginBy = loginBy;
+			}
 
+			function refreshTokenFailure() {
+				_self.loading(false);
+				$.mobile.navigate("#page-welcome");
+			};
+
+			function passwordFailure() {
+				_self.loading(false);
+				$.mobile.navigate("#page-welcome");
+			};
+
+			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
+			authentication.loginWithRefreshToken(window.localStorage.instameet_refresh_token);
+		},
+		
 		bindEvents : function () {
 			document.addEventListener("backbutton", _self.backButtonHandler, false);
 		},
-
+				
 		backButtonHandler : function (event) {
 			if($.mobile.activePage.is('#page-welcome')){
-				/* 
-				 Event preventDefault/stopPropagation not required as adding backbutton
-				  listener itself override the default behaviour. Refer below PhoneGap link.
-				*/
-				//e.preventDefault();
 				navigator.app.exitApp();
 			} else if($.mobile.activePage.is('#page-home')){
 				_self.onLogoutClickHandler();
@@ -83,203 +137,7 @@ var Controller = function () {
 				navigator.app.backHistory();
 			}
 		},
-
-		welcome : function () {
-						
-			openFB.init({
-				appId : '1442578949379728'
-			});
-
-			openGL.init({
-				appId : '105396803775-7cu06be67flqbt6j9792ikf8rccb7ant.apps.googleusercontent.com'
-			});
-
-			$('#btn-fb').off('click');
-			$('#btn-fb').on('click', function (evt) {
-				_self.loading('show');
-				openFB.getLoginStatus(function (response) {
-					if (response.status === "connected") {
-						_self.fbLogin();
-					} else {
-						openFB.login(function (response) {
-							if (response.status === 'connected') {
-								_self.fbLogin();
-							} else {
-								alert('Facebook login failed: ' + response.error);
-							}
-						}, {
-							scope : 'email,read_stream'
-						});
-					}
-				});
-				evt.preventDefault();
-			});
-
-			$('#btn-gl').off('click');
-			$('#btn-gl').on('click', function(evt) {
-				openGL.getLoginStatus(function(response) {
-					if (response.status === "connected") {
-						_self.glLogin();
-					} else {
-						openGL.login(function(response) {
-							if (response.status === 'connected') {
-								_self.glLogin();
-							} else {
-								alert('Google login failed: ' + response.error);
-							}
-						}, {scope: 'openid profile email'});
-					}
-				});
-				evt.preventDefault();
-			});
-		},
-
-		setTimers : function () {
-			timer = setInterval(function () {
-					_self.updateLocation();
-					_self.getMessageMeeting();
-				}, 600000);
-		},
-
-		glLogin : function () {
-			function loginSuccess() {
-				_self.updateLocation();
-				_self.getMessageMeeting();
-				_self.setTimers();
-				$.mobile.navigate("#page-home");
-				userLoggedIn = "glAdmin";
-				loginBy = "gl";
-			};
-
-			function refreshTokenFailure() {
-				$.mobile.navigate("#page-welcome");
-			};
-
-			function passwordFailure() {
-				alert('Invalid Username and Password');
-			};
-
-			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
-			authentication.loginWithPassword('glAdmin', 'glAdmin');
-		},
-
-		fbLogin : function () {
-			openFB.api({
-				path: '/me',
-				success: function (data) {
-					_self.checkIfSocialUserExist(data);
-				},
-				error: function (error) {
-					console.log(error.message);
-				}
-			});
-		},
 		
-		checkIfSocialUserExist: function(data){
-			var that = this;
-			this.socialData = data;
-				
-			$.ajax({
-				url : hostUrl + "/validate/username",
-				type : 'POST',
-				data : "username=" + data.email,
-				processData : false,
-				contentType : "application/x-www-form-urlencoded"
-			}).done(function (data) {
-				if (data === 1) {
-					_self.processSocialLogin(that.socialData);
-				} else {
-					_self.registerSocialUser(that.socialData);
-				}
-			});
-		},
-		
-		registerSocialUser: function(data){
-			var that = this, formData = new FormData();
-			this.data = data;
-						
-			formData.append('name', data.name);
-			formData.append('email', data.email+'_'+new Date().getTime());
-			formData.append('password','fbUser');
-			formData.append('skills', '');
-			formData.append('username', data.email);
-			formData.append('contact', '');
-			formData.append('visible', '1');
-			
-			$.ajax({
-				url : hostUrl + "/resources",
-				type : 'POST',
-				data : formData,
-				processData : false,
-				contentType : false
-			}).done(function (data) {
-				_self.processSocialLogin(that.data);
-			}).fail(function (jqXHR, textStatus, errorThrown) {
-				_self.loading('hide');
-			});
-		},
-		
-		processSocialLogin: function(data){
-			var that = this;
-			this.data = data;
-			function loginSuccess() {
-				_self.updateLocation();
-				_self.getMessageMeeting();
-				_self.setTimers();
-				$.mobile.navigate("#page-home");
-				userLoggedIn = that.data.email;
-				loginBy = "fb";
-			};
-
-			function refreshTokenFailure() {
-				_self.loading('hide');
-				$.mobile.navigate("#page-welcome");
-			};
-
-			function passwordFailure() {
-				_self.loading('hide');
-				alert('Invalid Username and Password');
-			};
-
-			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
-			authentication.loginWithPassword(data.email, 'fbUser');
-		},
-		
-		login : function () {
-			this.$login = $("#page-login");
-			$('#userId', this.$login).val("");
-			$('#password', this.$login).val("");
-
-			$('#btn-login').off('click');
-			$('#btn-login').on('click', function () {
-				_self.loading('show');
-				this.$login = $("#page-login");
-				var userId = $('#userId', this.$login).val(),
-				pass = $('#password', this.$login).val();
-				userLoggedIn = userId;
-				function loginSuccess() {
-					_self.updateLocation();
-					_self.isResetPassRequired();
-					_self.getMessageMeeting();
-					_self.setTimers();
-					loginBy = "normal";
-				};
-
-				function refreshTokenFailure() {
-					_self.loading('hide');
-					$.mobile.navigate("#page-login");
-				};
-
-				function passwordFailure() {
-					_self.loading('hide');
-					alert('Invalid Username and Password');
-				};
-
-				var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
-				authentication.loginWithPassword(userId, pass);
-			});
-		},
-
 		onLogoutClickHandler : function () {
 			function onConfirm(button){
 				if(button === 1){	
@@ -288,9 +146,13 @@ var Controller = function () {
 						url : hostUrl.concat("/logout?access_token=" + window.bearerToken),
 						type : 'GET'
 					}).done(function () {
-						_self.loading('hide');
-						if (loginBy === "fb") {
+						if (window.localStorage.instameet_loginBy === "fb") {
 							openFB.logout(function () {
+								_self.clearAll();
+								$.mobile.navigate('#page-welcome');
+							});
+						}if (window.localStorage.instameet_loginBy === "fb") {
+							openGL.logout(function () {
 								_self.clearAll();
 								$.mobile.navigate('#page-welcome');
 							});
@@ -310,12 +172,202 @@ var Controller = function () {
 		},
 		
 		clearAll: function(){
+			_self.loading('hide');
 			clearInterval(timer);
-			for (var i = 0; i < meetingTimers.length; i++) {
-				clearTimeout(meetingTimers[i]);
+			timer = null;
+			window.localStorage.removeItem('instameet_refresh_token');
+			window.localStorage.removeItem('instameet_loginBy');
+			window.localStorage.removeItem('fbtoken');
+			window.localStorage.removeItem('gltoken');
+		},
+		
+		setTimers : function () {
+			timer = setInterval(function () {
+				_self.updateLocation();
+				_self.getMessageMeeting();
+			}, 60000);
+		},
+
+		welcome : function () {
+			$('#btn-fb').off('click');
+			$('#btn-fb').on('click', function (evt) {
+				_self.loading('show');
+				openFB.getLoginStatus(function (response) {
+					if (response.status === "connected") {
+						_self.getSocialData('fb');
+					} else {
+						openFB.login(function (response) {
+							if (response.status === 'connected') {
+								_self.getSocialData('fb');
+							} else {
+								alert('Facebook login failed: ' + response.error);
+							}
+						},{ scope : 'email,read_stream' });
+					}
+				});
+				evt.preventDefault();
+			});
+
+			$('#btn-gl').off('click');
+			$('#btn-gl').on('click', function(evt) {
+				_self.loading('show');
+				openGL.getLoginStatus(function(response) {
+					if (response.status === "connected") {
+						_self.getSocialData('gl');
+					} else {
+						openGL.login(function(response) {
+							if (response.status === 'connected') {
+								_self.getSocialData('gl');
+							} else {
+								alert('Google login failed: ' + response.error);
+							}
+						}, {scope: 'openid profile email'});
+					}
+				});
+				evt.preventDefault();
+			});
+		},
+		
+		getSocialData : function (social) {
+			if(social === 'fb'){
+				openFB.api({
+					path: '/me',
+					params:{'fields':'name,email,picture'},
+					success: function (data) {
+						_self._checkIfSocialUserExist(data,'fb');
+					},
+					error: function (error) {
+						console.log(error.message);
+					}
+				});
+			} else if(social === 'gl'){
+				openGL.api({
+					path: '/userinfo',
+					success: function (data) {
+						_self._checkIfSocialUserExist(data,'gl');
+					},
+					error: function (error) {
+						alert(error.message);
+					}
+				});
 			}
-			window.bearerToken = null;
-			window.refresh_token = null;
+		},
+		
+		_checkIfSocialUserExist: function(data, social){
+			var that = this;
+			this.data = data;
+			this.social = social;
+
+			$.ajax({
+				url : hostUrl + "/validate/username",
+				type : 'POST',
+				data : "username=" + social + '_' + data.email,
+				processData : false,
+				contentType : "application/x-www-form-urlencoded"
+			}).done(function (data) {
+				if (data === 1) {
+					_self.processSocialLogin(that.data, that.social);
+				} else {
+					_self.registerSocialUser(that.data, that.social);
+				}
+			});
+		},
+		
+		processSocialLogin: function(data, social){
+			var that = this;
+			this.data = data;
+			this.social = social;
+			function loginSuccess() {
+				_self.loading('hide');
+				$.mobile.navigate("#page-home");
+				userLoggedIn = that.social+'_'+that.data.email;
+				window.localStorage.instameet_loginBy = that.social;
+			};
+
+			function refreshTokenFailure() {
+				_self.loading("hide");
+				$.mobile.navigate("#page-login");
+			};
+
+			function passwordFailure() {
+				_self.loading("hide");
+			};
+
+			var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
+			if(this.social === 'fb'){
+				authentication.loginWithPassword('fb_'+data.email, 'fbUser');
+			} else if(this.social === 'gl'){
+				authentication.loginWithPassword('gl_'+data.email, 'glUser');
+			}
+			
+		},
+		
+		registerSocialUser: function(data, social){
+			var that = this, formData = new FormData();
+			this.data = data;
+			this.social = social;
+			
+			if(data.email){
+				formData.append('name', data.name);
+				formData.append('email', data.email+'_'+new Date().getTime());
+				if(social === 'fb'){
+					formData.append('username', 'fb_'+data.email);
+					formData.append('password','fbUser');
+				} else if(social === 'gl'){
+					formData.append('username', 'gl_'+data.email);
+					formData.append('password','glUser');
+				}
+				formData.append('skills', '');
+				formData.append('contact', '');
+				formData.append('visible', '1');
+				
+				$.ajax({
+					url : hostUrl + "/resources",
+					type : 'POST',
+					data : formData,
+					processData : false,
+					contentType : false
+				}).done(function (data) {
+					_self.processSocialLogin(that.data, that.social);
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					_self.loading("hide");
+				});
+			} else {
+				_self._showAlert('App is not able to fetch your details. Please check your account settings.');
+			}
+		},
+		
+		
+		login : function () {
+			this.$login = $("#page-login");
+			$('#userId', this.$login).val("");
+			$('#password', this.$login).val("");
+
+			$('#btn-login').off('click');
+			$('#btn-login').on('click', function () {
+				_self.loading('show');
+				this.$login = $("#page-login");
+				var userId = $('#userId', this.$login).val(),
+				pass = $('#password', this.$login).val();
+				userLoggedIn = userId;
+				function loginSuccess() {
+					_self.isResetPassRequired();
+					window.localStorage.instameet_loginBy = "normal";
+				};
+
+				function refreshTokenFailure() {
+					_self.loading('hide');
+					$.mobile.navigate("#page-login");
+				};
+
+				function passwordFailure() {
+					_self.loading('hide');
+					alert('Invalid Username and Password');
+				};
+
+				var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
+				authentication.loginWithPassword(userId, pass);
+			});
 		},
 		
 		isResetPassRequired : function () {
@@ -332,34 +384,6 @@ var Controller = function () {
 					$.mobile.navigate('#page-resetPassword');
 				}
 				_self.loading('hide');
-			});
-		},
-
-		forgotPassword : function () {
-			this.$forgotPass = $('#page-forgot');
-			$('#forgot', this.$forgotPass).val("");
-
-			$('#forgotPassForm').off('submit');
-			$('#forgotPassForm').submit(function (e) {
-				this.$forgotPass = $('#page-forgot');
-				var username = $('#forgot', this.$forgotPass).val();
-
-				if (username === "") {
-					alert("Enter username.");
-				} else {
-					_self.loading("show");
-					$.ajax({
-						url : hostUrl.concat("/password/forgot"),
-						type : 'PUT',
-						data : {
-							"username" : username
-						},
-					}).done(function (o) {
-						_self.loading("hide");
-						$.mobile.navigate('#page-login');
-					});
-				}
-				e.preventDefault();
 			});
 		},
 
@@ -398,7 +422,7 @@ var Controller = function () {
 				e.preventDefault();
 			});
 		},
-
+		
 		onLocationError : function (error) {
 			//alert(error.code);
 		},
@@ -444,18 +468,38 @@ var Controller = function () {
 		},
 		
 		onMapSuccess : function (lat, lng) {
-			var obj = map.getLatLongRange(lat, lng);
+			_self._latlng = {
+				"latitude" : lat,
+				"longitude" : lng
+			};
+			
 			$.ajax({
-				url : hostUrl.concat("/search/location"),
-				type : 'GET',
-				data : obj
-			}).done(function (user) {
-				if (user.length > 0) {
-					map.showOnMap(user, userLoggedIn);
-					_self.renderListView(user);
-				}
-				_self.loading("hide");
+				url : hostUrl.concat("/resources/updateLocation?access_token=" + window.bearerToken),
+				type : 'PUT',
+				data : _self._latlng
+			}).done(function (data, textStatus, jqXHR) {
+				_self.updateLocation();
+				_self.getMessageMeeting();
+				_self.setTimers();
+				updateCallback();
+				//console.log("location updated successfully.");
 			});
+			
+			function updateCallback(){
+				var obj = map.getLatLongRange(_self._latlng.latitude, _self._latlng.longitude);
+				$.ajax({
+					url : hostUrl.concat("/search/location"),
+					type : 'GET',
+					data : obj
+				}).done(function (user) {
+					if (user.length > 0) {
+						map.showOnMap(user, userLoggedIn);
+						_self.renderListView(user);
+					}
+					_self.loading("hide");
+				});
+			}
+			
 
 		},
 
@@ -594,7 +638,8 @@ var Controller = function () {
 						url : hostUrl + "/profilePic/" + obj.username,
 						type : 'GET',
 						context : $listItem,
-						async : true
+						async : true,
+						contentType : "image/png"
 					}).done(function (dataURL) {
 						if (dataURL) {
 							$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
@@ -623,12 +668,7 @@ var Controller = function () {
 		},
 
 		profile : function () {
-			$.ajax({
-				url : hostUrl + "/resources/fetch?access_token=" + window.bearerToken,
-				type : 'GET'
-			}).done(function (user) {
-				//alert(user);
-			});
+			
 		},
 
 		showProfile : function (uInfo) {
@@ -653,10 +693,12 @@ var Controller = function () {
 			this.$uName = $('#txtUName', this.$profilePage);
 
 			$('#txtTo').val(uInfo.username);
-			$('#txtTo').attr("disabled", "disabled");
+			$('#txtToName').val(uInfo.name);
+			$('#txtToName').attr("disabled", "disabled");
 
 			$('#txtToMeeting').val(uInfo.username);
-			$('#txtToMeeting').attr("disabled", "disabled");
+			$('#txtToNameMeeting').val(uInfo.name);
+			$('#txtToNameMeeting').attr("disabled", "disabled");
 			$.mobile.navigate('#page-profile');
 		},
 
@@ -664,16 +706,32 @@ var Controller = function () {
 			var that = this;
 			this.$meetings = $('#page-meetings');
 			this.$toMeeting = $('#txtToMeeting', this.$meetings);
+			this.$toNameMeeting = $('#txtToNameMeeting', this.$meetings);
 			this.$agendaMeeting = $('#txtAgendaMeeting', this.$meetings).val("");
 			this.$datetimeMeeting = $('#txtDatetimeMeeting', this.$meetings).val("");
 			this.$venueMeeting = $('#txtVenueMeeting', this.$meetings).val("");
 			this.$descMeeting = $('#taDescMeeting', this.$meetings).val("");
-
+			
+			this.$errorDT = $('#errorDT', this.$meetings)
+			
 			this.$btnSendMeetingReq = $('#btnSendMeetingReq', this.$meetings);
-
+			
+			/*this.$datetimeMeeting.off('focusout');
+			this.$datetimeMeeting.on('focusout', function(event){
+				var val = event.currentTarget.value.replace("T", " ").replace("Z", ""),
+				enterDate = new Date(val).getTime()
+				now = new Date().getTime();
+				that.$datetimeMeeting.removeClass("invalidInp");
+				that.$errorDT.addClass("display");
+				if((enterDate - now) < 1800000){
+					that.$datetimeMeeting.addClass("invalidInp");
+					that.$errorDT.removeClass("display");
+				}
+			});*/
+			
 			this.$btnSendMeetingReq.off('click');
 			this.$btnSendMeetingReq.on('click', function (e) {
-				var dtVal = that.$datetimeMeeting.val().replace("T", " ");
+				var dtVal = that.$datetimeMeeting.val().replace("T", " ").replace("Z", "");
 				var milliSec = Date.parse(dtVal);
 				var date = new Date();
 				date.setTime(milliSec);
@@ -689,13 +747,14 @@ var Controller = function () {
 						'venue' : that.$venueMeeting.val()
 					}
 				}).done(function () {
-					_self.getMessageMeeting();
+					//_self.getMessageMeeting();
 					_self.loading("hide");
-					alert("Meeting request sent successfully");
+					//alert("Meeting request sent successfully");
 					that.$agendaMeeting.val("");
 					that.$datetimeMeeting.val("");
 					that.$venueMeeting.val("");
 					that.$descMeeting.val("");
+					$.mobile.navigate("#page-meetingView");
 				});
 				e.preventDefault();
 			});
@@ -804,7 +863,12 @@ var Controller = function () {
 				var obj = _self.meetings[i];
 				if (obj.fromUserName !== null) {
 					if (obj.fromStatus !== -1) {
-						$meetinglist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						if(obj.status === 0){
+							$meetinglist.append("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						} else {
+							$meetinglist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						}
+						
 
 						$meetinglistItem = $('#' + obj.id);
 						$.ajax({
@@ -905,11 +969,12 @@ var Controller = function () {
 					type : 'POST',
 					data : sendMessData
 				}).done(function () {
-					_self.getMessageMeeting();
+					//_self.getMessageMeeting();
 					_self.loading("hide");
-					alert("Message sent successfully");
+					//alert("Message sent successfully");
 					that.$subject.val("");
 					that.$message.val("");
+					$.mobile.navigate("#page-messageView");
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					//alert(JSON.stringify(jqXHR) + ":" + textStatus + ":" + errorThrown);
 					//alert(JSON.stringify(jqXHR.getAllResponseHeaders()));
@@ -935,10 +1000,10 @@ var Controller = function () {
 				}
 			});
 
-			if(data && data.prevPage.attr('id') === 'page-messages') {
+			/*if(data && data.prevPage.attr('id') === 'page-messages') {
 				$('#message-view').css('display', 'block');
 				$('#messageListView').css('display', 'none');
-			}
+			}*/
 
 			$('#messageError').addClass('display');
 			if (_self.messages.length === 0) {
@@ -1002,7 +1067,8 @@ var Controller = function () {
 						} else {
 							$('#txtTo').val(messData.toUserName);
 						}
-						$('#txtTo').attr("disabled", "disabled");
+						$('#txtToName').val(messData.name);
+						$('#txtToName').attr("disabled", "disabled");
 						$('#page-messages').data('replyMessData',messData);
 						$.mobile.navigate('#page-messages');
 					});
@@ -1016,7 +1082,12 @@ var Controller = function () {
 				var obj =this[this.length - 1];
 				if (obj.fromUserName !== null) {
 					if (obj.fromStatus !== -1) {
-						that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						if(obj.toStatus === 0){
+							that.$messagelist.append("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						} else {
+							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+						}
+						
 
 						that.$messagelistItem = $('#' + obj.id);
 						that.$messagelistItem.data('messData', obj);
@@ -1052,55 +1123,18 @@ var Controller = function () {
 				}
 				
 			});
-			/*for (var i in _self.messages) {
-				var obj = _self.messages[i];
-				if (obj.fromUserName !== null) {
-					if (obj.fromStatus !== -1) {
-						$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.fromUserName + "</h1><p class='list-subject'>" + obj.subject + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
-
-						$messagelistItem = $('#' + obj.id);
-						$.ajax({
-							url : hostUrl + "/profilePic/" + obj.fromUserName,
-							type : 'GET',
-							context : $messagelistItem,
-							async : true
-						}).done(function (dataURL) {
-							if (dataURL) {
-								$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-							}
-						});
-					}
-				}
-				if (obj.toUserName !== null) {
-					if (obj.toStatus !== -1) {
-						$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.toUserName + "</h1><p class='list-subject'>" + obj.subject + " </p></div><div class='semtIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
-
-						$messagelistItem = $('#' + obj.id);
-						$.ajax({
-							url : hostUrl + "/profilePic/" + obj.toUserName,
-							type : 'GET',
-							context : $messagelistItem,
-							async : true
-						}).done(function (dataURL) {
-							if (dataURL) {
-								$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-							}
-						});
-					}
-				}
-
-			}*/
 		},
 
 		getMessageMeeting : function () {
-			//var newMessCount = 0,
-			var newMeetCount = 0;
 			$.ajax({
 				url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 				type : 'GET',
 				async : true
 			}).done(function (message) {
 				_self.messages = _self.parseMessages(message);
+				/*_self.messages.sort(function (a, b) {
+					return parseInt(a[a.length-1].toStatus) - parseInt(b[b.length-1].toStatus);
+				});*/
 				var newMessCount = 0;
 				$.each(_self.messages, function(index){
 					var obj = this[this.length - 1];
@@ -1118,36 +1152,45 @@ var Controller = function () {
 				}
 			});
 
-			for (var i = 0; i < meetingTimers.length; i++) {
-				clearTimeout(meetingTimers[i]);
-			}
 			$.ajax({
 				url : hostUrl.concat("/meetings?access_token=" + window.bearerToken),
 				type : 'GET'
 			}).done(function (meeting) {
 				_self.meetings = meeting;
 				_self.meetings.sort(function (a, b) {
-					return parseInt(a.status) - parseInt(b.status)
+					return parseInt(a.status) - parseInt(b.status);
 				});
+				var newMeetCount = 0, arrSchedule = [];
+				_self._cancelMeetingLocalNotification();
 				for (var i = 0; i < _self.meetings.length; i++) {
 					var obj = _self.meetings[i];
 					if (obj.fromUserName !== null && obj.status === 0) {
 						newMeetCount++;
 					}
-					var date = new Date(),
-					milliSec = Math.round(date.getTime() / 1000);
-
-					if (obj.status === 1 && obj.datetime >= milliSec) {
-						var diff = (obj.datetime - milliSec) * 1000;
-						meetingTimers[i] = setTimeout(function (data) {
-								if (data.fromUserName !== null) {
-									alert("You have a meeting now with " + data.fromUserName + " at " + obj.venue);
-								} else if (data.toUserName !== null) {
-									alert("You have a meeting now with " + data.toUserName + " at " + obj.venue);
-								}
-							}, diff, obj);
+					
+					var date = new Date(), 
+					seconds = Math.round(date.getTime() / 1000);
+					if (obj.status === 1 && obj.datetime >= seconds) {						
+						diff = (obj.datetime - seconds);
+						//console.log("Difference: " + diff);
+						//alert("Meeting id: " + obj.id);
+						arrSchedule.push({
+							id: obj.id+"-beforeHour",
+							title: "InstaMeet",
+							text: "You have a meeting now with " + obj.name + " within 1 hour.",
+							at: new Date((obj.datetime-3600)*1000),
+							data: obj
+						});
+						arrSchedule.push({
+							id: obj.id,
+							title: "InstaMeet",
+							text: "You have a meeting now with " + obj.name + " at " + obj.venue,
+							at: new Date(obj.datetime*1000),
+							data: obj
+						});
 					}
 				}
+				_self._scheduleMeetingLocalNotification(arrSchedule);
 				if (newMeetCount > 0) {
 					$('#meetCount').text(newMeetCount);
 					$('#meetCount').removeClass('display');
@@ -1157,8 +1200,21 @@ var Controller = function () {
 			});
 		},
 		
+		_cancelMeetingLocalNotification: function(){
+			cordova.plugins.notification.local.cancelAll(function(){
+				console.log("All notiication are canceled.");
+			});
+		},
+		
+		_scheduleMeetingLocalNotification: function(arrSchedule){
+			cordova.plugins.notification.local.schedule(arrSchedule);
+			cordova.plugins.notification.local.on("trigger",function(notification){
+				
+			});
+		},
+				
 		parseMessages: function(message){
-			var arrMess = {};
+			var arrMess = [];
 			for(var i=0; i < message.length; i++){
 				if(message[i].topicId === -1){
 					arrMess[message[i].id] = [];
@@ -1168,6 +1224,34 @@ var Controller = function () {
 				}
 			}
 			return arrMess;
+		},
+		
+		forgotPassword : function () {
+			this.$forgotPass = $('#page-forgot');
+			$('#forgot', this.$forgotPass).val("");
+
+			$('#forgotPassForm').off('submit');
+			$('#forgotPassForm').submit(function (e) {
+				this.$forgotPass = $('#page-forgot');
+				var username = $('#forgot', this.$forgotPass).val();
+
+				if (username === "") {
+					alert("Enter username.");
+				} else {
+					_self.loading("show");
+					$.ajax({
+						url : hostUrl.concat("/password/forgot"),
+						type : 'PUT',
+						data : {
+							"username" : username
+						},
+					}).done(function (o) {
+						_self.loading("hide");
+						$.mobile.navigate('#page-login');
+					});
+				}
+				e.preventDefault();
+			});
 		},
 		
 		feedback : function () {
@@ -1540,6 +1624,14 @@ var Controller = function () {
 					"type" : mimeString
 				});
 			return bb;
+		},
+		
+		_showAlert: function(message){
+			navigator.notification.alert(message, null, 'InstaMeet', 'OK')
+		},
+		
+		_showConfirm: function(message, confirmCallback){
+			navigator.notification.confirm(message, confirmCallback, 'InstaMeet', ['Yes','No'])
 		}
 	};
 
