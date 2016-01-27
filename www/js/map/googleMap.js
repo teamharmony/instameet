@@ -1,26 +1,29 @@
-(function(){
-	var script = document.createElement('script');
-	script.type = 'text/javascript';
-	script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCJehKn3JAo02kj6fGFqJMDWkwbnAoBqVM&callback=map.load&libraries=geometry';
-	document.body.appendChild(script);
-})();
-
 var map = {
-	_map: null, _thatMap: null, _markersArray: [],
-	init: function(successCallback, markerClickHandler){
+	_map: null, _selfMap: null, _markersArray: [],
+	init: function(successCallback, errorCallback, markerClickHandler){
+		_selfMap = this;
 		_map = null;
+		if(!!document.getElementById("mapScript")){
+			document.body.removeChild(document.getElementById("mapScript"));
+		}
 		$('#map-canvas').empty();
-		_thatMap = this;
-		_thatMap.markerClickHandler = markerClickHandler;
-		_thatMap.successCallback = successCallback;
-		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError);
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCJehKn3JAo02kj6fGFqJMDWkwbnAoBqVM&callback=map.load&libraries=geometry',
+		script.id = 'mapScript';
+		document.body.appendChild(script);
+		
+		_selfMap.markerClickHandler = markerClickHandler;
+		_selfMap.errorCallback = errorCallback;
+		_selfMap.successCallback = successCallback;
 	},
 	
 	load: function() {
 		console.log('Map loaded successfull');
+		
+		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
 	},
 	onError: function(error){
-		//alert("Error getting geolocation");
 		if(error.code === 1){
 			var mapOptions = {
 				zoom: 2,
@@ -30,6 +33,8 @@ var map = {
 			_map = new google.maps.Map(document.getElementById('map-canvas'),
 			  mapOptions);
 		}
+		_selfMap.errorCallback();
+		
 	},
 	onSuccess: function(position){
 		var lat = position.coords.latitude,
@@ -45,11 +50,11 @@ var map = {
 		_map = new google.maps.Map(document.getElementById('map-canvas'),
 		  mapOptions);
 		
-		_thatMap.successCallback(lat,lng);
+		_selfMap.successCallback(lat,lng);
 	},
 	
 	showOnMap: function(users, userLoggedIn, markerClickCallback){
-		_thatMap.clearMarkers();
+		_selfMap.clearMarkers();
 		var bounds = new google.maps.LatLngBounds();
 		var infowindow = new google.maps.InfoWindow();
 		
@@ -66,11 +71,11 @@ var map = {
 					data: obj
 				});
 				
-				_thatMap._markersArray.push(marker);
+				_selfMap._markersArray.push(marker);
 			 
 				google.maps.event.addListener(marker, 'click', jQuery.proxy(function() {
-					_thatMap.markerClickHandler(this);
-					//infowindow.setContent(_thatMap.infoWindowContent(this.data));
+					_selfMap.markerClickHandler(this);
+					//infowindow.setContent(_selfMap.infoWindowContent(this.data));
 					//infowindow.open(_map, this);				
 				}, obj));
 			}
@@ -79,10 +84,10 @@ var map = {
 	},
 	
 	clearMarkers: function(){
-		for (var i = 0; i < _thatMap._markersArray.length; i++) {
-			_thatMap._markersArray[i].setMap(null);
+		for (var i = 0; i < _selfMap._markersArray.length; i++) {
+			_selfMap._markersArray[i].setMap(null);
 		}
-		_thatMap._markersArray = [];
+		_selfMap._markersArray = [];
 	},
 	
 	infoWindowContent: function(data){

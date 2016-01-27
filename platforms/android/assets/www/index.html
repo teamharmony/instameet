@@ -1,357 +1,354 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta http-equiv="Content-Security-Policy" content="script-src * 'unsafe-eval' 'unsafe-inline'; connect-src *; style-src * 'unsafe-inline' ; media-src *;">
-		<!-- <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'"> -->
-		<meta name="format-detection" content="telephone=no">
-		<meta name="msapplication-tap-highlight" content="no">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-		<!-- <link href="css/themes/2/jquery.mobile.icons.min.css" rel="stylesheet" /> -->
-		<link rel="old stylesheet" type="text/css" href="lib/jqm/1.4.5/jquery.mobile.structure-1.4.5.min.css"/>
-		<link rel="new stylesheet" type="text/css" href="css/index.css" />
-		<link rel="newest stylesheet" type="text/css" href="css/style.css" />
-		<title>InstaMeet</title>
-	</head>
-	<body>
-		<div data-role="page" id="page-welcome" class="welcomescreen wrap">
-			<div role="main" class="ui-content">
-				<div class="welcomepic">
-					<img src="img/logo.png" width="127" height="114" alt="" />
-				</div>
-				<div class="welcometitle">
-					InstaMeet
-				</div>
-				<div class="welcomebutton">
-					<a href="#page-signup" data-role="button" class="button btnSignup" data-transition="slide" data-direction="forward">Signup here !!</a><a href="#page-login" data-role="button" class="button btnLogin" data-transition="slide" data-direction="forward">Login</a>
-				</div>
-				<div class="buttons social-btn">
-					<a id="btn-fb" data-role="button" data-inline="true" data-icon="fb-icon" data-iconpos="notext" class="social-icon">Facebook</a><a id="btn-tt" data-role="button" data-inline="true" data-icon="twitter-icon" data-iconpos="notext" class="social-icon">Twitter</a><a id="btn-gl" data-role="button" data-inline="true" data-icon="google-icon" data-iconpos="notext" class="social-icon">Google+</a>
-				</div>
-			</div>
-		</div>
-		<div data-role="page" id="page-signup" class="signupscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg">
-				<a href="#page-welcome" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Sign Up!</h1>
-			</div>
-			<div role="main" class="ui-content wrap" >
-				<form method="POST" id="form-register" class="form-register">
-					<div id="registrationscreenpart1">
-						<div class="title">
-							Personal Information
-						</div>
-						<input id="name" name="name" type="text" placeholder="Name *" >
-						<input id="skills" name="skills" type="text" placeholder="Skills *"  >
-						<input id="contact" name="contact" type="tel" placeholder="Contact Number *"  >
-						<div class="profilePic">
-							<div class="profilePhoto">
-								<img id="imgDisp" data-inline="true" width="100px" height="95px" src="./img/defaultImg.png" alt=""/>
-								<button id="btnUpload" data-inline="true" class="iconBtn btnUpload" >
-									<span aria-hidden="true" class="glyphicon glyphicon-pencil"></span>
-								</button>
-							</div>
-						</div>
-						<button id="btnContinue" class="button btnContinue">
-							Continue
-						</button>
-					</div>
-					<div id="registrationscreenpart2" style="display: none;">
-						<div class="title">
-							Account Detail
-						</div>
-						<p id="error" class="display"></p>
-						<input id="username" name="username" type="text" placeholder="Username *" >
-						<input id="email" name="email" type="text" placeholder="Email *" >
-						<input id="password" name="password" type="password" placeholder="Password *"  >
-						<input id="confirmPass" name="confirmPass" type="password" placeholder="Confirm Password *"  >
-						<div class="captcha-box">
-							<input id="txtCaptcha" type="text" class="captcha" readonly tabindex="-1" />
-							<input id="captcha" type="text" placeholder="Captcha *" >
-						</div>
-						<label class="makeVisible">
-							<input id="regVisible" type="checkbox" name="visible">
-							Make me visible </label>
-						<button id="btnRegSubmit" class="button btnRegister" type="submit">
-							REGISTER
-						</button>
-						<!-- <a id="btnRegSubmit" data-role="button" class="button" data-transition="slide" data-direction="forward">REGISTER</a> -->
-					</div>
-					<div class="error" id="errorMsg" style="display:none"></div>
-				</form>
-			</div>
-		</div>
-		<div data-role="page" id="page-edit" class="editscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Edit Profile</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<form method="POST" id="form-edit" class="form-edit">
-					<input id="username" type="text" placeholder="Username *" readonly>
-					<input id="name" name="name" type="text" placeholder="Name *" required>
-					<input id="skills" name="skills" type="text" placeholder="Skills *"  required>
-					<input id="email" name="email" type="text" placeholder="Email *" required>
-					<input id="city" type="text" placeholder="City *" readonly>
-					<!--  <div class="profilePic">
-					<button id="btnEditImgUpload" data-inline="true" >Upload</button>
-					<img id="imgEditDisp" data-inline="true" width="75px" height="60px" src="./img/defaultImg.png" alt=""/> </div>-->
-
-					<div class="profilePic">
-						<div class="profilePhoto">
-							<img id="imgEditDisp" data-inline="true" width="100px" height="95px" src="./img/defaultImg.png" alt=""/>
-							<button id="btnEditImgUpload" data-inline="true" class="iconBtn btnUpload" >
-								<span aria-hidden="true" class="glyphicon glyphicon-pencil"></span>
-							</button>
-						</div>
-					</div>
-
-					<label>
-						<input id="editVisible" type="checkbox" name="visible">
-						Make me visible </label>
-					<button id="btnCancel" data-role="button" data-inline="true" class="button">
-						Cancel
-					</button>
-					<button id="btnEditSubmit" data-role="button" data-inline="true" class="btnEditSubmit button" type="submit">
-						Submit
-					</button>
-				</form>
-			</div>
-		</div>
-		<div data-role="page" id="page-login" class="loginscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg">
-				<a href="#page-welcome" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Log In!</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<form class="loginform" method="POST" id="submit-login-form">
-					<input id="userId" type="text" placeholder="Username">
-					<input id="password" type="password" placeholder="Password">
-					<a id="btn-login" data-role="button" class="button btnLogin" data-transition="slide" data-direction="forward">Login</a>
-				</form>
-				<a id="forgotLink" href="#page-forgot" class="forgotLink" style="color:#fff">Forgot your Password?</a>
-			</div>
-		</div>
-		<div data-role="page" id="page-forgot" class="forgotscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a href="#page-login" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Reset Password</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<div class="forgotpassinfo">
-					Reset Password after logging in using temporary password that will be send to you on registered email address.
-				</div>
-				<form id="forgotPassForm" class="forgotpassform" method="POST">
-					<input id="forgot" name="username" type="text" placeholder="Enter your Username">
-					<button type="submit" class="button btnSendNewPassword">
-						Send New Password
-					</button>
-				</form>
-			</div>
-		</div>
-		<div data-role="page" id="page-resetPassword" class="resetpasswordscreen ">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<!-- <a href="#page-login" data-icon="back-icon" data-iconpos="notext" data-transition="slide" data-direction="reverse"></a> -->
-				<h1>Reset Password</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<form id="resetPassForm">
-					<input id="tempPass" type="password" placeholder="Temporary Password">
-					<input id="newPass" type="password" placeholder="New Password">
-					<input id="confirmPass"type="password" placeholder="Confirm New Password">
-					<button type="submit" class="button">
-						RESET PASSWORD
-					</button>
-				</form>
-			</div>
-		</div>
-		<div data-role="page" id="page-home" class="homescreen">
-			<div class="panel" data-role="panel" data-position="left" data-display="push" id="side-menu">
-				<ul>
-					<!--<li><a href="#page-home" title="Home">Home</a></li>-->
-					<!--<li><a href="#page-profile" title="profile">My Profile</a></li>-->
-					<li>
-						<a href="#" id="btnEditProfile" title="Profile">Edit Profile</a>
-					</li>
-					<li>
-						<a href="#page-messageView" id="btnMessages" title="My Messages">My Messages</a>
-					</li>
-					<li>
-						<a href="#page-meetingView" id="btnMeetings" title="My Meetings">My Meetings</a>
-					</li>
-					<li>
-						<a href="#page-feedback" title="feedback">Feedback</a>
-					</li>
-					<li>
-						<a href="#" id="btnLogout" title="Logout">Logout</a>
-					</li>
-				</ul>
-			</div>
-			<div data-role="header" data-tap-toggle="false" class="headerbg">
-				<a id="leftSideMenu" href="#side-menu" class="iconBtn" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-menu-hamburger"></span> </a>
-				<div id="title" class="headTitle">
-					Home
-				</div>
-				<a id="btnSearch" href="#" class="iconBtn" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-search"></span> </a>
-				<div class="iconBtnMsg ui-btn-right boxMsg">
-					<a id="btnMessageIcon" href="#page-messageView" class="iconBtn " data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-envelope"></span> </a>
-					<span id="messCount" class="display ui-btn-corner-all countBublMess"></span>
-				</div>
-				<div class="iconBtnMsg ui-btn-right boxCal">
-					<a id="btnMeetingIcon" href="#page-meetingView" class="iconBtn iconBtnMsg" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-calendar"></span> </a>
-					<span id="meetCount" class="display ui-btn-corner-all countBublMess"></span>
-				</div>
-				<!-- <button id="btnSearch" class="searchIcon" ></button> -->
-				<a href="#" id="btnBack" data-iconpos="notext" class="iconBtn backIcon display"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<div id="filterSearchDiv" class="display FilterSearch">
-					<input id="search-input" class="searchField" type="text" placeholder="Search"></input>
-					<select name="search-choice" id="search-choice" class="searchOption" data-native-menu="false">
-						<option value="name" selected>Name</option>
-						<option value="skill">Skill</option>
-						<option value="city">City</option>
-					</select>
-         <span aria-hidden="true" class="glyphicon glyphicon-triangle-bottom searcharrow"></span>
-				</div>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<div id="map-canvas"></div>
-				<div class="listView">
-					<ul id="list" class="list"></ul>
-				</div>
-			</div>
-		</div>
-		<div data-role="page" id="page-profile" class="profilescreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Profile</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-      <div class="profilePic">
-				<img id="imgProfileUser" src="./img/defaultImg.png" class="ImgprofilePic" />
+    <head>
+        <meta http-equiv="Content-Security-Policy" content="script-src * 'unsafe-eval' 'unsafe-inline'; connect-src *; style-src * 'unsafe-inline' ; media-src *;">
+        <!-- <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'"> -->
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <!-- <link href="css/themes/2/jquery.mobile.icons.min.css" rel="stylesheet" /> -->
+        <link rel="old stylesheet" type="text/css" href="lib/jqm/1.4.5/jquery.mobile.structure-1.4.5.min.css"/>
+        <link rel="new stylesheet" type="text/css" href="css/index.css" />
+        <link rel="newest stylesheet" type="text/css" href="css/style.css" />
+        <title>InstaMeet</title>
+    </head>
+    <body>
+        <div data-role="page" id="page-welcome" class="welcomescreen wrap">
+            <div role="main" class="ui-content">
+                <div class="welcomepic">
+                    <img id="img" src="img/logo.png" width="127" height="114" alt="" />
+                </div>
+                <div class="welcometitle">
+                    InstaMeet
+                </div>
+                <div class="welcomebutton">
+                    <a href="#page-signup" data-role="button" class="button btnSignup" data-transition="slide" data-direction="forward">Signup here !!</a><a href="#page-login" data-role="button" class="button btnLogin" data-transition="slide" data-direction="forward">Login</a>
+                </div>
+                <div class="buttons social-btn">
+                    <a id="btn-fb" data-role="button" data-inline="true" data-icon="fb-icon" data-iconpos="notext" class="social-icon">Facebook</a><a id="btn-tt" data-role="button" data-inline="true" data-icon="twitter-icon" data-iconpos="notext" class="social-icon" style="display:none">Twitter</a><a id="btn-gl" data-role="button" data-inline="true" data-icon="google-icon" data-iconpos="notext" class="social-icon">Google+</a>
+                </div>
+            </div>
         </div>
-        <div class="msgBox">
-          <p id="txtUName" class="username"></p>
-          <p id="txtUSkills" class="skills"></p>
-          <p id="txtUDistance" class="distances"></p>
+        <div data-role="page" id="page-signup" class="signupscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg">
+                <a href="#page-welcome" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Sign Up!</h1>
+            </div>
+            <div role="main" class="ui-content wrap" >
+                <form method="POST" id="form-register" class="form-register">
+                    <div id="registrationscreenpart1">
+                        <div class="title">
+                            Personal Information
+                        </div>
+                        <input id="name" name="name" type="text" placeholder="Name *" >
+                        <input id="skills" name="skills" type="text" placeholder="Skills *"  >
+                        <input id="contact" name="contact" type="tel" placeholder="Contact Number *"  >
+                        <div class="profilePic">
+                            <div class="profilePhoto">
+                                <img id="imgDisp" data-inline="true" width="100px" height="95px" src="./img/defaultImg.png" alt=""/>
+                                <button id="btnUpload" data-inline="true" class="iconBtn btnUpload" >
+                                <span aria-hidden="true" class="glyphicon glyphicon-pencil"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="btnContinue" class="button btnContinue">
+                        Continue
+                        </button>
+                    </div>
+                    <div id="registrationscreenpart2" style="display: none;">
+                        <div class="title">
+                            Account Detail
+                        </div>
+                        <p id="error" class="display"></p>
+                        <input id="username" name="username" type="text" placeholder="Username *" >
+                        <input id="email" name="email" type="text" placeholder="Email *" >
+                        <input id="password" name="password" type="password" placeholder="Password *"  >
+                        <input id="confirmPass" name="confirmPass" type="password" placeholder="Confirm Password *"  >
+                        <div class="captcha-box">
+                            <input id="txtCaptcha" type="text" class="captcha" readonly tabindex="-1" />
+                            <input id="captcha" type="text" placeholder="Captcha *" >
+                        </div>
+                        <label class="makeVisible">
+                        <input id="regVisible" type="checkbox" name="visible">
+                        Make me visible </label>
+                        <button id="btnRegSubmit" class="button btnRegister" type="submit">
+                        REGISTER
+                        </button>
+                        <!-- <a id="btnRegSubmit" data-role="button" class="button" data-transition="slide" data-direction="forward">REGISTER</a> -->
+                    </div>
+                    <div class="error" id="errorMsg" style="display:none"></div>
+                </form>
+            </div>
         </div>
-        <a href="#page-meetings" data-role="button" class="button btnMeetingRequest" data-transition="slide" data-direction="forward">Send a Meeting Request</a>
-        <a href="#page-messages" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send a Message</a>
-			</div>
-		</div>
-		<div data-role="page" id="page-meetings" class="meetingscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a href="#page-profile" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Meeting Request</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<input id="txtToMeeting" type="hidden" placeholder="To">
-				<input id="txtToNameMeeting" type="text" placeholder="To">
-				<input id="txtAgendaMeeting" type="text" placeholder="Agenda">
-				<input id="txtDatetimeMeeting" type="datetime-local" data-clear-btn="false"  placeholder="yyyy-mm-dd hh:mm a">
-				<p id="errorDT" class="display error">Time needs to be atleast 30 mins later.</p>
-				<input id="txtVenueMeeting" type="text" placeholder="Venue">
-				<textarea id="taDescMeeting" placeholder="Description" rows="5" cols="30" data-autogrow="false"></textarea>
-				<a id="btnSendMeetingReq" data-role="button" class="button btnMeetingRequest" data-transition="slide" data-direction="forward">Send a Request</a>
-			</div>
-		</div>
-		<div data-role="page" id="page-meetingView" class="meetingviewscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg">
-				<a id="btnBackMeetingView" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Meetings</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<div id="meetingListView" class="meetingListView">
-					<ul id="meetingList" class="list"></ul>
-				</div>
-				<div id="meeting-view" class="meetingview">
-					<div class="profilePic">
-						<img id="meetingUPic"src="img/defaultImg.png" class="ImgprofilePic"  />
-					</div>
-           <div class="msgBox">
-              <p id="uMeetingsName" class="senderName"></p>
-              <p id="uMeetingAgenda" class="agenda"></p>
-              <p id="uMeetingDatetime" class="datetime"></p>
-              <p id="uMeetingVenue" class="venue"></p>
-              <p id="uMeetingDesc" class="desc"></p>
-					 </div>
-          <div align="center" style="display: flex">
-						<a id="btn-Reject" data-role="button" class="button btnReject" data-inline="true" data-transition="slide" data-direction="forward">Reject</a><a id="btn-Accept" data-role="button" class="button btnAccept" data-inline="true" data-transition="slide" data-direction="forward">Accept</a>
-					</div>
-					<span id="meetingStatus" class="status"></span>
-				</div>
-				<div id="meetingError" class="display errorMessage">
-					No Meetings
-				</div>
-			</div>
-		</div>
-		<div data-role="page" id="page-messages" class="messagescreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a id="btnBack" href="#" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Compose Message</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<input id="txtTo" type="hidden" placeholder="To">
-				<input id="txtToName" type="text" placeholder="To">
-				<textarea id="taMessage" placeholder="Messsage" rows="5" cols="30" data-autogrow="false"></textarea>
-				<a id="btnSendMessage" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send Message</a>
-			</div>
-		</div>
-		<div data-role="page" id="page-messageView" class="messageviewscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a id="btnBackMessView" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Messages</h1>
-			</div>
-			<div role="main" class="ui-content wrap">
-				<div id="messageListView" class="messageListView">
-					<ul id="messageList" class="list"></ul>
-				</div>
-				<div id="message-view" class="messageview">
-					<div class="profilePic">
-						<img id="messageUPic" src="img/defaultImg.png"  class="ImgprofilePic" />
-					</div>
-					<div class="msgBox">
-						<p id="uMessName" class="senderName"></p> 
-						<!--<p id="uMessSub" class="subject"> </p>-->
-						<ul id="messViewList" class="messageList">
-						
-						</ul>
-						<!--<p id="uMessMessage" class="message"></p>-->
-					</div>
-					<a id="btnReplyMessage" data-role="button" class="button btnReplyMessage" data-transition="slide" data-direction="forward">Reply</a>
-				</div>
-				<div id="messageError" class="display errorMessage">
-					No Messages
-				</div>
-			</div>
-		</div>
-		<div data-role="page" id="page-feedback" class="feedbackscreen">
-			<div data-role="header" data-tap-toggle="false" class="headerbg" >
-				<a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
-				<h1>Feedback</h1>
-			</div>
-		 	<div role="main" class="ui-content wrap">
-				<input id="txtFeedbackSubject" type="text" placeholder="SUBJECT">
-				<textarea id="taFeedbackMessage" placeholder="MESSAGE"  class="textArea" cols="30" data-autogrow="false"></textarea>
-				<a id="btnSendFeedback" data-role="button" class="button btnSendFeedback" data-transition="slide" data-direction="forward">Send Feedback</a>
-			</div>
-		</div>
-		<script>
-			function handleVisibility(oEvent) {
-				var cb = oEvent.target;
-				alert($("#regVisible").is(":checked"));
-				cb.value = $("#regVisible").is(":checked") ? 1 : 0;
-				alert($("#regVisible").val() + ":" + cb.value);
-			}
-		</script>
-		<script type="text/javascript" src="cordova.js"></script>
-		<script src="lib/fastclick/fastclick.min.js"></script>
-		<script src="lib/jquery/2.1.1/jquery-2.1.1.js"></script>
-		<script type="text/javascript" src="cordova.js"></script>
-		<script src="js/social-connect/openfb.js"></script>
-		<script src="js/social-connect/opengl.js"></script>
-		<script type="text/javascript" src="js/Controller.js"></script>
-		<script type="text/javascript" src="js/index.js"></script>
+        <div data-role="page" id="page-edit" class="editscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Edit Profile</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <form method="POST" id="form-edit" class="form-edit">
+                    <input id="username" type="text" placeholder="Username *" readonly>
+                    <input id="name" name="name" type="text" placeholder="Name *" required>
+                    <input id="skills" name="skills" type="text" placeholder="Skills *"  required>
+                    <input id="email" name="email" type="text" placeholder="Email *" required>
+                    <input id="city" type="text" placeholder="City *" readonly>
+                    <!--  <div class="profilePic">
+                        <button id="btnEditImgUpload" data-inline="true" >Upload</button>
+                        <img id="imgEditDisp" data-inline="true" width="75px" height="60px" src="./img/defaultImg.png" alt=""/> </div>-->
+                    <div class="profilePic">
+                        <div class="profilePhoto">
+                            <img id="imgEditDisp" data-inline="true" width="100px" height="95px" src="./img/defaultImg.png" alt=""/>
+                            <button id="btnEditImgUpload" data-inline="true" class="iconBtn btnUpload" >
+                            <span aria-hidden="true" class="glyphicon glyphicon-pencil"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <label>
+                    <input id="editVisible" type="checkbox" name="visible">
+                    Make me visible </label>
+                    <button id="btnCancel" data-role="button" data-inline="true" class="button">
+                    Cancel
+                    </button>
+                    <button id="btnEditSubmit" data-role="button" data-inline="true" class="btnEditSubmit button" type="submit">
+                    Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div data-role="page" id="page-login" class="loginscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg">
+                <a href="#page-welcome" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Log In!</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <form class="loginform" method="POST" id="submit-login-form">
+                    <input id="userId" type="text" placeholder="Username">
+                    <input id="password" type="password" placeholder="Password">
+                    <a id="btn-login" data-role="button" class="button btnLogin" data-transition="slide" data-direction="forward">Login</a>
+                </form>
+                <a id="forgotLink" href="#page-forgot" class="forgotLink" style="color:#fff">Forgot your Password?</a>
+            </div>
+        </div>
+        <div data-role="page" id="page-forgot" class="forgotscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a href="#page-login" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Reset Password</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <div class="forgotpassinfo">
+                    Reset Password after logging in using temporary password that will be send to you on registered email address.
+                </div>
+                <form id="forgotPassForm" class="forgotpassform" method="POST">
+                    <input id="forgot" name="username" type="text" placeholder="Enter your Username">
+                    <button type="submit" class="button btnSendNewPassword">
+                    Send New Password
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div data-role="page" id="page-resetPassword" class="resetpasswordscreen ">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <!-- <a href="#page-login" data-icon="back-icon" data-iconpos="notext" data-transition="slide" data-direction="reverse"></a> -->
+                <h1>Reset Password</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <form id="resetPassForm">
+                    <input id="tempPass" type="password" placeholder="Temporary Password">
+                    <input id="newPass" type="password" placeholder="New Password">
+                    <input id="confirmPass"type="password" placeholder="Confirm New Password">
+                    <button type="submit" class="button">
+                    RESET PASSWORD
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div data-role="page" id="page-home" class="homescreen">
+            <div class="panel" data-role="panel" data-position="left" data-display="push" id="side-menu">
+                <ul>
+                    <!--<li><a href="#page-home" title="Home">Home</a></li>-->
+                    <!--<li><a href="#page-profile" title="profile">My Profile</a></li>-->
+                    <li>
+                        <a href="#" id="btnEditProfile" title="Profile">Edit Profile</a>
+                    </li>
+                    <li>
+                        <a href="#page-messageView" id="btnMessages" title="My Messages">My Messages</a>
+                    </li>
+                    <li>
+                        <a href="#page-meetingView" id="btnMeetings" title="My Meetings">My Meetings</a>
+                    </li>
+                    <li>
+                        <a href="#page-feedback" title="feedback">Feedback</a>
+                    </li>
+                    <li>
+                        <a href="#" id="btnLogout" title="Logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+            <div data-role="header" data-tap-toggle="false" class="headerbg">
+                <a id="leftSideMenu" href="#side-menu" class="iconBtn" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-menu-hamburger"></span> </a>
+                <div id="title" class="headTitle">
+                    Welcome !!
+                </div>
+                <a id="btnSearch" href="#" class="iconBtn" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-search"></span> </a>
+                <div class="iconBtnMsg ui-btn-right boxMsg">
+                    <a id="btnMessageIcon" href="#page-messageView" class="iconBtn " data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-envelope"></span> </a>
+                    <span id="messCount" class="display ui-btn-corner-all countBublMess"></span>
+                </div>
+                <div class="iconBtnMsg ui-btn-right boxCal">
+                    <a id="btnMeetingIcon" href="#page-meetingView" class="iconBtn iconBtnMsg" data-iconpos="notext"> <span aria-hidden="true" class="glyphicon glyphicon-calendar"></span> </a>
+                    <span id="meetCount" class="display ui-btn-corner-all countBublMess"></span>
+                </div>
+                <!-- <button id="btnSearch" class="searchIcon" ></button> -->
+                <a href="#" id="btnBack" data-iconpos="notext" class="iconBtn backIcon display"> <span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <div id="filterSearchDiv" class="display FilterSearch">
+                    <input id="search-input" class="searchField" type="text" placeholder="Search"></input>
+                    <select name="search-choice" id="search-choice" class="searchOption" data-native-menu="false">
+                        <option value="name" selected>Name</option>
+                        <option value="skill">Skill</option>
+                        <option value="city">City</option>
+                    </select>
+                    <span aria-hidden="true" class="glyphicon glyphicon-triangle-bottom searcharrow"></span>
+                </div>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <div id="map-canvas"></div>
+                <div class="listView">
+                    <ul id="list" class="list"></ul>
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="page-profile" class="profilescreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Profile</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <div class="profilePic">
+                    <img id="imgProfileUser" src="./img/defaultImg.png" class="ImgprofilePic" />
+                </div>
+                <div class="msgBox">
+                    <p id="txtUName" class="username"></p>
+                    <p id="txtUSkills" class="skills"></p>
+                    <p id="txtUDistance" class="distances"></p>
+                </div>
+                <a href="#page-meetings" data-role="button" class="button btnMeetingRequest" data-transition="slide" data-direction="forward">Send a Meeting Request</a>
+                <a href="#page-messages" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send a Message</a>
+            </div>
+        </div>
+        <div data-role="page" id="page-meetings" class="meetingscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a href="#page-profile" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Meeting Request</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <input id="txtToMeeting" type="hidden" placeholder="To">
+                <input id="txtToNameMeeting" type="text" placeholder="To">
+                <input id="txtAgendaMeeting" type="text" placeholder="Agenda">
+                <input id="txtDatetimeMeeting" type="datetime-local" data-clear-btn="false"  placeholder="yyyy-mm-dd hh:mm a">
+                <p id="errorDT" class="display error">Time needs to be atleast 30 mins later.</p>
+                <input id="txtVenueMeeting" type="text" placeholder="Venue">
+                <textarea id="taDescMeeting" placeholder="Description" rows="5" cols="30" data-autogrow="false"></textarea>
+                <a id="btnSendMeetingReq" data-role="button" class="button btnMeetingRequest" data-transition="slide" data-direction="forward">Send a Request</a>
+            </div>
+        </div>
+        <div data-role="page" id="page-meetingView" class="meetingviewscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg">
+                <a id="btnBackMeetingView" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Meetings</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <div id="meetingListView" class="meetingListView">
+                    <ul id="meetingList" class="list"></ul>
+                </div>
+                <div id="meeting-view" class="meetingview">
+                    <div class="profilePic">
+                        <img id="meetingUPic"src="img/defaultImg.png" class="ImgprofilePic"  />
+                    </div>
+                    <div class="msgBox">
+                        <p id="uMeetingsName" class="senderName"></p>
+                        <p id="uMeetingAgenda" class="agenda"></p>
+                        <p id="uMeetingDatetime" class="datetime"></p>
+                        <p id="uMeetingVenue" class="venue"></p>
+                        <p id="uMeetingDesc" class="desc"></p>
+                    </div>
+                    <div align="center" style="display: flex">
+                        <a id="btn-Reject" data-role="button" class="button btnReject" data-inline="true" data-transition="slide" data-direction="forward">Reject</a><a id="btn-Accept" data-role="button" class="button btnAccept" data-inline="true" data-transition="slide" data-direction="forward">Accept</a>
+                    </div>
+                    <span id="meetingStatus" class="status"></span>
+                </div>
+                <div id="meetingError" class="display errorMessage">
+                    No Meetings
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="page-messages" class="messagescreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a id="btnBack" href="#" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Compose Message</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <input id="txtTo" type="hidden" placeholder="To">
+                <input id="txtToName" type="text" placeholder="To">
+                <textarea id="taMessage" placeholder="Messsage" rows="5" cols="30" data-autogrow="false"></textarea>
+                <a id="btnSendMessage" data-role="button" class="button btnSendMessage" data-transition="slide" data-direction="forward">Send Message</a>
+            </div>
+        </div>
+        <div data-role="page" id="page-messageView" class="messageviewscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a id="btnBackMessView" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Messages</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <div id="messageListView" class="messageListView">
+                    <ul id="messageList" class="list"></ul>
+                </div>
+                <div id="message-view" class="messageview">
+                    <div class="profilePic">
+                        <img id="messageUPic" src="img/defaultImg.png"  class="ImgprofilePic" />
+                    </div>
+                    <div class="msgBox">
+                        <p id="uMessName" class="senderName"></p>
+                        <!--<p id="uMessSub" class="subject"> </p>-->
+                        <ul id="messViewList" class="messageList">
+                        </ul>
+                        <!--<p id="uMessMessage" class="message"></p>-->
+                    </div>
+                    <a id="btnReplyMessage" data-role="button" class="button btnReplyMessage" data-transition="slide" data-direction="forward">Reply</a>
+                </div>
+                <div id="messageError" class="display errorMessage">
+                    No Messages
+                </div>
+            </div>
+        </div>
+        <div data-role="page" id="page-feedback" class="feedbackscreen">
+            <div data-role="header" data-tap-toggle="false" class="headerbg" >
+                <a href="#page-home" class="iconBtn" data-iconpos="notext" data-transition="slide" data-direction="reverse"><span aria-hidden="true" class="glyphicon glyphicon-arrow-left"></span> </a>
+                <h1>Feedback</h1>
+            </div>
+            <div role="main" class="ui-content wrap">
+                <input id="txtFeedbackSubject" type="text" placeholder="SUBJECT">
+                <textarea id="taFeedbackMessage" placeholder="MESSAGE"  class="textArea" cols="30" data-autogrow="false"></textarea>
+                <a id="btnSendFeedback" data-role="button" class="button btnSendFeedback" data-transition="slide" data-direction="forward">Send Feedback</a>
+            </div>
+        </div>
+        <script>
+            function handleVisibility(oEvent) {
+            	var cb = oEvent.target;
+            	alert($("#regVisible").is(":checked"));
+            	cb.value = $("#regVisible").is(":checked") ? 1 : 0;
+            	alert($("#regVisible").val() + ":" + cb.value);
+            }
+        </script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script src="lib/fastclick/fastclick.min.js"></script>
+        <script src="lib/jquery/2.1.1/jquery-2.1.1.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
 		<script src="lib/jqm/1.4.5/jquery.mobile-1.4.5.js"></script>
-		<script type="text/javascript" src="js/map/googleMap.js"></script>
+        <script src="js/social-connect/openfb.js"></script>
+        <script src="js/social-connect/opengl.js"></script>
 		<script type="text/javascript" src="js/authenticationProxy.js"></script>
-	</body>
+		<script type="text/javascript" src="js/map/googleMap.js"></script>
+        <script type="text/javascript" src="js/Controller.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
 </html>

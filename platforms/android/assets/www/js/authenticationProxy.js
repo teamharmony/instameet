@@ -4,13 +4,13 @@
 	function loginSuccess(o) {
 		var that = this;
 		window.bearerToken = o.value;
-		window.refresh_token = o.refreshToken.value;
+		window.localStorage.instameet_refresh_token = o.refreshToken.value;
 		//store the refreshToken in localStorage
 				
 		//This function ensures we always have a valid bearer token.
 		bearerTimeout = setTimeout(function(){
 			clearTimeout(bearerTimeout);
-			that.loginWithRefreshToken(window.refresh_token);
+			that.loginWithRefreshToken(window.localStorage.instameet_refresh_token);
 		}, o.expiresIn * 1000 - 100);
 		
 		//clear the timer if not cleared by unloading time.
@@ -46,7 +46,7 @@
 		      	async: false,
 		      	type: 'GET',
 		      	context: this
-		 }).done(loginSuccess).fail(this.refreshTokenFailureCallback);
+		 }).done(loginSuccess).fail(this.refreshTokenFailureCallback).done(this.loginSuccessCallBack);
 	}
 	
 	
