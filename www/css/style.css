@@ -12,6 +12,7 @@ body {
 :focus {
 	/*border: 1px solid #86EDFC !important;*/
 }
+
 /*.ui-content{
  background: #00A2D8;
  position:absolute;
@@ -904,3 +905,12 @@ padding: 6px;
 /*meetings */ 
 .ui-input-text input[type="datetime-local"], 
 #txtDatetimeMeeting { background:#fff url(../img/calendar.png) 99% center no-repeat; background-size: 27px; }
+
+img{
+	display: block;
+    max-width:230px; //as desired
+    max-height:95px; // as desired
+    width: auto;
+    height: auto;
+
+}

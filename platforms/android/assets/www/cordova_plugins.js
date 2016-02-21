@@ -248,6 +248,13 @@ module.exports = [
         ]
     },
     {
+        "file": "plugins/com.pushwoosh.plugins.pushwoosh/www/PushNotification.js",
+        "id": "com.pushwoosh.plugins.pushwoosh.PushNotification",
+        "clobbers": [
+            "plugins.pushNotification"
+        ]
+    },
+    {
         "file": "plugins/cordova-plugin-device/www/device.js",
         "id": "cordova-plugin-device.device",
         "clobbers": [
@@ -267,6 +274,7 @@ module.exports.metadata =
     "cordova-plugin-whitelist": "1.0.0",
     "cordova-plugin-dialogs": "1.2.0",
     "de.appplant.cordova.plugin.local-notification": "0.8.3-dev",
+    "com.pushwoosh.plugins.pushwoosh": "4.2.0",
     "cordova-plugin-device": "1.1.0",
     "cordova-plugin-registerusernotificationsettings": "1.0.2"
 }

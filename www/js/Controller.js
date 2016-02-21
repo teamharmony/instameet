@@ -2,7 +2,7 @@ var Controller = function () {
 	var hostUrl = "http://vps.hilfe.website:8080/ResourceMgmt",
 	//var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
-	userLoggedIn;
+	userLoggedIn, watchID;
 	//window.localStorage.instameet_loginBy = "normal";
 
 	var controller = {
@@ -79,7 +79,7 @@ var Controller = function () {
 		},
 		
 		checkLogin : function () {
-			
+			_self.initPushwoosh();
 			_self.welcome();
 			if (window.localStorage.instameet_loginBy === "normal") {
 				if (window.localStorage.instameet_refresh_token) {
@@ -102,6 +102,17 @@ var Controller = function () {
 					}
 				});
 			}
+			
+
+			navigator.geolocation.getCurrentPosition(function(success){
+				
+			}, function(error){
+				function okCallback(){
+					navigator.app.exitApp();
+				};
+				_self._showAlert("Please enable your location services to use InstaMeet.", okCallback);
+			} );
+			
 		},
 		
 		directLoginApp : function (loginBy) {
@@ -109,7 +120,26 @@ var Controller = function () {
 				$.mobile.navigate('#page-home');
 				userLoggedIn = window.localStorage.userLogIn;
 				window.localStorage.instameet_loginBy = loginBy;
-			}
+				_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+					function(status) {
+						console.warn('setTags success');
+						_self.pushNotification.registerDevice(
+							function(status) {
+								var pushToken = status;
+								console.warn('push token: ' + pushToken);
+								
+							},
+							function(status) {
+								console.warn(JSON.stringify(['failed to register ', status]));
+							}
+						);
+					},
+					function(status) {
+						console.warn('setTags failed');
+					}
+				);
+				_self.updateLocation();
+			};
 
 			function refreshTokenFailure() {
 				_self.loading(false);
@@ -163,7 +193,8 @@ var Controller = function () {
 						}
 					});
 				}
-			}
+			};
+			
 			navigator.notification.confirm(
 				'Are you sure you want to logout?',  // message
 				onConfirm,              // callback to invoke with index of button pressed
@@ -174,21 +205,31 @@ var Controller = function () {
 		
 		clearAll: function(){
 			_self.loading('hide');
-			clearInterval(timer);
-			timer = null;
 			window.localStorage.removeItem('instameet_refresh_token');
 			window.localStorage.removeItem('instameet_loginBy');
 			window.localStorage.removeItem('fbtoken');
 			window.localStorage.removeItem('gltoken');
+			
+			_self.pushNotification.setTags({"instaUsername":null},
+				function(status) {
+					console.warn('setTags success');
+					_self.pushNotification.unregisterDevice(
+						function(status) {
+							var pushToken = status;
+							console.warn('push token: ' + pushToken);
+							
+						},
+						function(status) {
+							console.warn(JSON.stringify(['failed to register ', status]));
+						}
+					);
+				},
+				function(status) {
+					console.warn('setTags failed');
+				}
+			);
 		},
 		
-		setTimers : function () {
-			timer = setInterval(function () {
-				_self.updateLocation();
-				_self.getMessageMeeting();
-			}, 60000);
-		},
-
 		welcome : function () {
 			$('#btn-fb').off('click');
 			$('#btn-fb').on('click', function (evt) {
@@ -201,7 +242,7 @@ var Controller = function () {
 							if (response.status === 'connected') {
 								_self.getSocialData('fb');
 							} else {
-								alert('Facebook login failed: ' + response.error);
+								_self._showAlert('Facebook login failed: ' + response.error);
 							}
 						},{ scope : 'email,read_stream' });
 					}
@@ -220,7 +261,7 @@ var Controller = function () {
 							if (response.status === 'connected') {
 								_self.getSocialData('gl');
 							} else {
-								alert('Google login failed: ' + response.error);
+								_self._showAlert('Google login failed: ' + response.error);
 							}
 						}, {scope: 'openid profile email'});
 					}
@@ -248,7 +289,7 @@ var Controller = function () {
 						_self._checkIfSocialUserExist(data,'gl');
 					},
 					error: function (error) {
-						alert(error.message);
+						_self._showAlert(error.message);
 					}
 				});
 			}
@@ -279,10 +320,29 @@ var Controller = function () {
 			this.data = data;
 			this.social = social;
 			function loginSuccess() {
+				_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+					function(status) {
+						console.warn('setTags success');
+						_self.pushNotification.registerDevice(
+							function(status) {
+								var pushToken = status;
+								console.warn('push token: ' + pushToken);
+								
+							},
+							function(status) {
+								console.warn(JSON.stringify(['failed to register ', status]));
+							}
+						);
+					},
+					function(status) {
+						console.warn('setTags failed');
+					}
+				);
 				_self.loading('hide');
 				$.mobile.navigate("#page-home");
 				window.localStorage.userLogIn = userLoggedIn = that.social+'_'+that.data.email;
 				window.localStorage.instameet_loginBy = that.social;
+				_self.updateLocation();
 			};
 
 			function refreshTokenFailure() {
@@ -377,6 +437,25 @@ var Controller = function () {
 				function loginSuccess() {
 					_self.isResetPassRequired();
 					window.localStorage.instameet_loginBy = "normal";
+					_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+						function(status) {
+							console.warn('setTags success');
+							_self.pushNotification.registerDevice(
+								function(status) {
+									var pushToken = status;
+									console.warn('push token: ' + pushToken);
+									
+								},
+								function(status) {
+									console.warn(JSON.stringify(['failed to register ', status]));
+								}
+							);
+						},
+						function(status) {
+							console.warn('setTags failed');
+						}
+					);
+					_self.updateLocation();
 				};
 
 				function refreshTokenFailure() {
@@ -386,7 +465,7 @@ var Controller = function () {
 
 				function passwordFailure() {
 					_self.loading('hide');
-					alert('Invalid Username and Password');
+					_self._showAlert('Invalid Username and Password');
 				};
 
 				var authentication = new AuthenticationProxy(hostUrl, clientId, loginSuccess, refreshTokenFailure, passwordFailure);
@@ -416,7 +495,7 @@ var Controller = function () {
 			$('#tempPass', this.$resetPass).val("");
 			$('#newPass', this.$resetPass).val("");
 			$('#confirmPass', this.$resetPass).val("");
-
+	
 			$('#resetPassForm').off('submit');
 			$('#resetPassForm').submit(function (e) {
 				this.$resetPass = $('#page-resetPassword');
@@ -426,9 +505,9 @@ var Controller = function () {
 				var confirmPass = $('#confirmPass', this.$resetPass).val();
 
 				if (oldPass === "") {
-					alert("Temporary Password can not be empty.");
+					_self._showAlert("Temporary Password can not be empty.");
 				} else if (pass !== confirmPass) {
-					alert("Password and Confirm Password needs to be same.");
+					_self._showAlert("Password and Confirm Password needs to be same.");
 				} else {
 					_self.loading("show");
 					$.ajax({
@@ -448,11 +527,18 @@ var Controller = function () {
 		},
 		
 		onLocationError : function (error) {
-			//alert(error.code);
+			console.log('code: ' + error.code + '\n' + 'message: ' + error.message + '\n');
 		},
 
 		updateLocation : function () {
-			navigator.geolocation.getCurrentPosition(function (position) {
+			/*if (watchID != null) {
+				navigator.geolocation.clearWatch(watchID);
+				watchID = null;
+			}
+			
+			var options = {enableHighAccuracy: true, timeout: 5000, maximumAge: 0, desiredAccuracy: 0, frequency: 1 };*/
+			
+			/*watchID =*/ navigator.geolocation.getCurrentPosition(function (position) {
 				var lat = position.coords.latitude,
 				lon = position.coords.longitude;
 				_self._latlng = {
@@ -502,8 +588,11 @@ var Controller = function () {
 			_self.showProfile(data);
 		},
 		
-		onMapError: function(){
+		onMapError: function(error){
+			//_self.onLocationError(error);
 			_self.loading("hide");
+			//_self._showAlert("Please enable your location services to use InstaMeet.");
+			//navigator.app.exitApp();
 		},
 		
 		onMapSuccess : function (lat, lng) {
@@ -512,32 +601,31 @@ var Controller = function () {
 				"longitude" : lng
 			};
 			
+			var obj = map.getLatLongRange(_self._latlng.latitude, _self._latlng.longitude);
 			$.ajax({
+				url : hostUrl.concat("/search/location"),
+				type : 'GET',
+				data : obj
+			}).done(function (user) {
+				if (user.length > 0) {
+					map.showOnMap(user, userLoggedIn);
+					_self.renderListView(user);
+				}
+				_self.loading("hide");
+			});
+				
+			/*$.ajax({
 				url : hostUrl.concat("/resources/updateLocation?access_token=" + window.bearerToken),
 				type : 'PUT',
 				data : _self._latlng
 			}).done(function (data, textStatus, jqXHR) {
-				_self.updateLocation();
-				_self.getMessageMeeting();
-				_self.setTimers();
 				updateCallback();
 				//console.log("location updated successfully.");
 			});
 			
 			function updateCallback(){
-				var obj = map.getLatLongRange(_self._latlng.latitude, _self._latlng.longitude);
-				$.ajax({
-					url : hostUrl.concat("/search/location"),
-					type : 'GET',
-					data : obj
-				}).done(function (user) {
-					if (user.length > 0) {
-						map.showOnMap(user, userLoggedIn);
-						_self.renderListView(user);
-					}
-					_self.loading("hide");
-				});
-			}
+				
+			}*/
 			
 
 		},
@@ -583,7 +671,7 @@ var Controller = function () {
 					map.showOnMap(user, userLoggedIn);
 					_self.renderListView(user);
 				} else {
-					alert("No result found for current search criteria.");
+					_self._showAlert("No result found for current search criteria.");
 				}
 				_self.loading("hide");
 			});
@@ -599,7 +687,7 @@ var Controller = function () {
 					map.showOnMap(user, userLoggedIn);
 					_self.renderListView(user);
 				} else {
-					alert("No result found for current search criteria.");
+					_self._showAlert("No result found for current search criteria.");
 				}
 				_self.loading("hide");
 			});
@@ -618,7 +706,7 @@ var Controller = function () {
 						map.showOnMap(user, userLoggedIn);
 						_self.renderListView(user);
 					} else {
-						alert("No result found for current search criteria.");
+						_self._showAlert("No result found for current search criteria.");
 					}
 					_self.loading("hide");
 				});
@@ -885,13 +973,15 @@ var Controller = function () {
 								$('#btn-Reject').off("click", _self.updateMeetingStatus);
 								$('#btn-Reject').on("click", {
 									id : meetingObj.id,
-									status : "-1"
+									status : "-1",
+									creator : meetingObj.fromUserName
 								}, _self.updateMeetingStatus);
 
 								$('#btn-Accept').off("click", _self.updateMeetingStatus);
 								$('#btn-Accept').on("click", {
 									id : meetingObj.id,
-									status : "1"
+									status : "1",
+									creator : meetingObj.fromUserName
 								}, _self.updateMeetingStatus);
 							}
 						}
@@ -947,15 +1037,17 @@ var Controller = function () {
 
 		updateMeetingStatus : function (event) {
 			var id = event.data.id,
-			status = event.data.status;
+			status = event.data.status,
+			creator = event.data.creator;
 			$.ajax({
 				url : hostUrl.concat("/meetings/" + id + "?access_token=" + window.bearerToken),
 				type : 'PUT',
 				data : {
-					'status' : status
+					'status' : status,
+					'creator' : creator
 				}
 			}).done(function () {
-				//_self.getMessageMeeting();
+				_self.getMessageMeeting();
 				console.log("Message status updated");
 				_self.meetingView();
 			});
@@ -1298,7 +1390,7 @@ var Controller = function () {
 				var username = $('#forgot', this.$forgotPass).val();
 
 				if (username === "") {
-					alert("Enter username.");
+					_self._showAlert("Enter username.");
 				} else {
 					_self.loading("show");
 					$.ajax({
@@ -1334,12 +1426,12 @@ var Controller = function () {
 					}
 				}).done(function () {
 					_self.loading("hide");
-					alert("Feedback sent successfully.");
+					_self._showAlert("Feedback sent successfully.");
 					$('#txtFeedbackSubject').val(''),
 					$('#taFeedbackMessage').val('');
 				}).fail(function () {
 					_self.loading("hide");
-					alert("Feedback could not be send.");
+					_self._showAlert("Feedback could not be send.");
 				});
 				e.preventDefault();
 			});
@@ -1418,16 +1510,16 @@ var Controller = function () {
 							};
 							reader.readAsDataURL(file);
 						}, function (message) {
-							alert('Failed because: ' + message);
+							_self._showAlert('Failed because: ' + message);
 						});
 					}
 
 					function failSystem() {
-						alert('failed');
+						_self._showAlert('failed');
 					}
 
 					function onCapturePhotoError(message) {
-						alert('Captured Failed because: ' + message);
+						_self._showAlert('Captured Failed because: ' + message);
 					}
 
 					event.preventDefault();
@@ -1608,16 +1700,16 @@ var Controller = function () {
 						};
 						reader.readAsDataURL(file);
 					}, function (message) {
-						alert('Failed because: ' + message);
+						_self._showAlert('Failed because: ' + message);
 					});
 				}
 
 				function failSystem() {
-					alert('failed');
+					_self._showAlert('failed');
 				}
 
 				function onCapturePhotoError(message) {
-					alert('Captured Failed because: ' + message);
+					_self._showAlert('Captured Failed because: ' + message);
 				}
 
 				event.preventDefault();
@@ -1635,7 +1727,7 @@ var Controller = function () {
 					$("#registrationscreenpart1").hide();
 					$("#registrationscreenpart2").show();
 				} else {
-					alert("Name, skills and contact can not be empty.");
+					_self._showAlert("Name, skills and contact can not be empty.");
 				}
 				e.preventDefault();
 			});
@@ -1662,7 +1754,7 @@ var Controller = function () {
 						$.mobile.navigate('#page-login');
 					}).fail(function (jqXHR, textStatus, errorThrown) {
 						_self.loading('hide');
-						alert("Could not register user. Please contact your administrator.");
+						_self._showAlert("Could not register user. Please contact your administrator.");
 						//alert(jqXHR + ":" + textStatus + ":" + errorThrown);
 						//alert(jqXHR.responseText);
 					});
@@ -1734,12 +1826,48 @@ var Controller = function () {
 			return bb;
 		},
 		
-		_showAlert: function(message){
-			navigator.notification.alert(message, null, 'InstaMeet', 'OK')
+		_showAlert: function(message, callback){
+			if(callback){
+				navigator.notification.alert(message, callback, 'InstaMeet', 'OK')
+			} else {
+				navigator.notification.alert(message, null, 'InstaMeet', 'OK')
+			}
+			
 		},
 		
 		_showConfirm: function(message, confirmCallback){
 			navigator.notification.confirm(message, confirmCallback, 'InstaMeet', ['Yes','No'])
+		},
+		
+		initPushwoosh: function(){
+			//console.log("Inside initPushwoosh");
+			var pushNotification = cordova.require("com.pushwoosh.plugins.pushwoosh.PushNotification");
+			_self.pushNotification = pushNotification;
+			//set push notifications handler
+			document.addEventListener('push-notification', function(event) {
+				var title = event.notification.title;
+				var userData = event.notification.userdata;
+										 
+				if(typeof(userData) != "undefined") {
+					console.warn('user data: ' + JSON.stringify(userData));
+				}
+											 
+				console.log(event.notification);
+			});
+		 
+			//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.
+			pushNotification.onDeviceReady({ projectid: "105396803775", pw_appid : "EB3A4-8E46D"});
+		 
+			//register for pushes
+			/*pushNotification.registerDevice(
+				function(status) {
+					var pushToken = status;
+					console.warn('push token: ' + pushToken);
+				},
+				function(status) {
+					console.warn(JSON.stringify(['failed to register ', status]));
+				}
+			);*/
 		}
 	};
 

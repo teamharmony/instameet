@@ -37,7 +37,7 @@ var app = {
     onDeviceReady: function() {
         //this.checkConnection();
 		controller = new Controller();
-		this.overrideBrowserAlert();
+		//this.overrideBrowserAlert();
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {

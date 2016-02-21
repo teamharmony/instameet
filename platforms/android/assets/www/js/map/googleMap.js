@@ -3,15 +3,19 @@ var map = {
 	init: function(successCallback, errorCallback, markerClickHandler){
 		_selfMap = this;
 		_map = null;
-		if(!!document.getElementById("mapScript")){
+		/*if(!!document.getElementById("mapScript")){
 			document.body.removeChild(document.getElementById("mapScript"));
+		}*/
+		//$('#map-canvas').empty();
+		if (typeof google === 'object' && typeof google.maps === 'object') {
+			_selfMap.load();
+		} else {
+			var script = document.createElement('script');
+			script.type = 'text/javascript';
+			script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCJehKn3JAo02kj6fGFqJMDWkwbnAoBqVM&callback=map.load&libraries=geometry',
+			script.id = 'mapScript';
+			document.body.appendChild(script);
 		}
-		$('#map-canvas').empty();
-		var script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCJehKn3JAo02kj6fGFqJMDWkwbnAoBqVM&callback=map.load&libraries=geometry',
-		script.id = 'mapScript';
-		document.body.appendChild(script);
 		
 		_selfMap.markerClickHandler = markerClickHandler;
 		_selfMap.errorCallback = errorCallback;
@@ -20,7 +24,6 @@ var map = {
 	
 	load: function() {
 		console.log('Map loaded successfull');
-		
 		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
 	},
 	onError: function(error){
@@ -33,7 +36,7 @@ var map = {
 			_map = new google.maps.Map(document.getElementById('map-canvas'),
 			  mapOptions);
 		}
-		_selfMap.errorCallback();
+		_selfMap.errorCallback(error);
 		
 	},
 	onSuccess: function(position){
