@@ -763,17 +763,22 @@ var Controller = function () {
 
 					$listItem = $('#lstItem-' + i);
 					$listItem.data('user', obj);
-					$.ajax({
-						url : hostUrl + "/profilePic/" + obj.username,
-						type : 'GET',
-						context : $listItem,
-						async : true,
-						contentType : "image/png"
-					}).done(function (dataURL) {
-						if (dataURL) {
-							$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-						}
-					});
+					if(obj.username.indexOf('fb') !==-1){
+						$listItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.username);
+					} else {
+						$.ajax({
+							url : hostUrl + "/profilePic/" + obj.username,
+							type : 'GET',
+							context : $listItem,
+							async : true,
+							contentType : "image/png"
+						}).done(function (dataURL) {
+							if (dataURL) {
+								$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+							}
+						});
+					}
+					
 				}
 			}
 		},
@@ -806,13 +811,20 @@ var Controller = function () {
 			var uDist = map.getDistanceFromLatLng(p1, p2);
 
 			$('#imgProfileUser').attr('src', 'img/defaultImg.png');
-			$.ajax({
-				url : hostUrl + "/profilePic/" + uInfo.username,
-				type : 'GET',
-				async : true
-			}).done(function (dataURL) {
-				$('#imgProfileUser').attr('src', 'data:image/png;base64,' + dataURL);
-			});
+			if(uInfo.username.indexOf('fb') !==-1){
+				$('#imgProfileUser').attr('src', hostUrl + "/profilePic/" + uInfo.username);
+			} else {
+				$.ajax({
+					url : hostUrl + "/profilePic/" + uInfo.username,
+					type : 'GET',
+					async : true
+				}).done(function (dataURL) {
+					if(dataURL){
+						$('#imgProfileUser').attr('src', 'data:image/png;base64,' + dataURL);
+					}
+					
+				});
+			}
 
 			$('#txtUName').text(uInfo.name);
 			$('#txtUSkills').text(uInfo.skills);
@@ -935,13 +947,22 @@ var Controller = function () {
 						} else {
 							img = meetingObj.toUserName;
 						}
-						$.ajax({
-							url : hostUrl + "/profilePic/" + img,
-							type : 'GET',
-							async : true
-						}).done(function (dataURL) {
-							$('#meetingUPic').attr('src', 'data:image/png;base64,' + dataURL);
-						});
+						
+						if(img.indexOf('fb') !==-1){
+							$('#meetingUPic').attr('src', hostUrl + "/profilePic/" + img);
+						} else {
+							$.ajax({
+								url : hostUrl + "/profilePic/" + img,
+								type : 'GET',
+								async : true
+							}).done(function (dataURL) {
+								if (dataURL) {
+									$('#meetingUPic').attr('src', 'data:image/png;base64,' + dataURL);
+								}
+								
+							});
+						}
+						
 
 						var date = new Date();
 						date.setTime(meetingObj.datetime * 1000);
@@ -1004,16 +1025,21 @@ var Controller = function () {
 							
 
 							$meetinglistItem = $('#' + obj.id);
-							$.ajax({
-								url : hostUrl + "/profilePic/" + obj.fromUserName,
-								type : 'GET',
-								context : $meetinglistItem,
-								async : true
-							}).done(function (dataURL) {
-								if (dataURL) {
-									$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-								}
-							});
+							if(obj.fromUserName.indexOf('fb') !==-1){
+								$meetinglistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.fromUserName);
+							} else {
+								$.ajax({
+									url : hostUrl + "/profilePic/" + obj.fromUserName,
+									type : 'GET',
+									context : $meetinglistItem,
+									async : true
+								}).done(function (dataURL) {
+									if (dataURL) {
+										$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+									}
+								});
+							}
+							
 						}
 					}
 					if (obj.toUserName !== null) {
@@ -1021,16 +1047,21 @@ var Controller = function () {
 							$meetinglist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
 
 							$meetinglistItem = $('#' + obj.id);
-							$.ajax({
-								url : hostUrl + "/profilePic/" + obj.toUserName,
-								type : 'GET',
-								context : $meetinglistItem,
-								async : true
-							}).done(function (dataURL) {
-								if (dataURL) {
-									$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-								}
-							});
+							if(obj.toUserName.indexOf('fb') !==-1){
+								$meetinglistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.toUserName);
+							} else {
+								$.ajax({
+									url : hostUrl + "/profilePic/" + obj.toUserName,
+									type : 'GET',
+									context : $meetinglistItem,
+									async : true
+								}).done(function (dataURL) {
+									if (dataURL) {
+										$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+									}
+								});
+							}
+							
 						}
 					}
 				}
@@ -1227,12 +1258,20 @@ var Controller = function () {
 							img = messData[messData.length-1].toUserName;
 						}
 
-						$.ajax({
-							url : hostUrl + "/profilePic/" + img,
-							type : 'GET'
-						}).done(function (dataURL) {
-							$('#messageUPic').attr('src', 'data:image/png;base64,' + dataURL);
-						});
+						if(img.indexOf('fb') !==-1){
+							$('#messageUPic').attr('src', hostUrl + "/profilePic/" + img);
+						} else {
+							$.ajax({
+								url : hostUrl + "/profilePic/" + img,
+								type : 'GET'
+							}).done(function (dataURL) {
+								if (dataURL) {
+									$('#messageUPic').attr('src', 'data:image/png;base64,' + dataURL);
+								}
+																
+							});
+						}
+						
 
 						$('#btnReplyMessage').off('click');
 						$('#btnReplyMessage').on('click', function () {
@@ -1265,16 +1304,22 @@ var Controller = function () {
 
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
-							$.ajax({
-								url : hostUrl + "/profilePic/" + obj.fromUserName,
-								type : 'GET',
-								context : that.$messagelistItem,
-								async : true
-							}).done(function (dataURL) {
-								if (dataURL) {
-									$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-								}
-							});
+							
+							if(obj.fromUserName.indexOf('fb') !==-1){
+								that.$messagelistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.fromUserNames);
+							} else {
+								$.ajax({
+									url : hostUrl + "/profilePic/" + obj.fromUserName,
+									type : 'GET',
+									context : that.$messagelistItem,
+									async : true
+								}).done(function (dataURL) {
+									if (dataURL) {
+										$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+									}
+								});
+							}
+						
 						}
 					}
 					if (obj.toUserName !== null) {
@@ -1283,16 +1328,22 @@ var Controller = function () {
 
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
-							$.ajax({
-								url : hostUrl + "/profilePic/" + obj.toUserName,
-								type : 'GET',
-								context : that.$messagelistItem,
-								async : true
-							}).done(function (dataURL) {
-								if (dataURL) {
-									$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
-								}
-							});
+							
+							if(obj.toUserName.indexOf('fb') !==-1){
+								that.$messagelistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.toUserName);
+							} else {
+								$.ajax({
+									url : hostUrl + "/profilePic/" + obj.toUserName,
+									type : 'GET',
+									context : that.$messagelistItem,
+									async : true
+								}).done(function (dataURL) {
+									if (dataURL) {
+										$(this).find('img').attr('src', 'data:image/png;base64,' + dataURL);
+									}
+								});
+							}
+							
 						}
 					}
 					
@@ -1409,7 +1460,7 @@ var Controller = function () {
 		parseMessages: function(message){
 			var arrMess = {};
 			jQuery.each(message, function(key, value){
-				console.log(key + ":" + value);
+				//console.log(key + ":" + value);
 				if(value.fromUserName !== null){
 					if(!arrMess[value.fromUserName]){
 						arrMess[value.fromUserName] = [];
@@ -1536,19 +1587,30 @@ var Controller = function () {
 
 				that.editPic = null;
 
-				$.ajax({
-					url : hostUrl + "/profilePic/" + user.username,
-					type : 'GET'
-				}).done(function (dataURL) {
-					$('#imgEditDisp', this.$editpage).attr('src', 'data:image/png;base64,' + dataURL);
-					that.editPic = dataURL;
-				});
+				if(user.username.indexOf('fb') !==-1){
+					$('#imgEditDisp', this.$editpage).find('img').attr('src', hostUrl + "/profilePic/" + user.username);
+				} else {
+					$.ajax({
+						url : hostUrl + "/profilePic/" + user.username,
+						type : 'GET'
+					}).done(function (dataURL) {
+						if (dataURL) {
+							$('#imgEditDisp', this.$editpage).attr('src', 'data:image/png;base64,' + dataURL);
+						}
+						
+						that.editPic = dataURL;
+					});
+				}
+				
 
 				$('#btnEditImgUpload', this.$editpage).off('click');
 				$('#btnEditImgUpload', this.$editpage).on('click', function (event) {
 					navigator.camera.getPicture(onCapturePhotoSuccess, onCapturePhotoError, {
 						destinationType : navigator.camera.DestinationType.FILE_URI,
-						sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY
+						sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY,
+						allowEdit: true,
+						targetWidth: 250,
+						targetHeight: 250
 					});
 
 					function onCapturePhotoSuccess(imageData) {
@@ -1739,7 +1801,10 @@ var Controller = function () {
 			this.$btnUpload.on('click', function (event) {
 				navigator.camera.getPicture(onCapturePhotoSuccess, onCapturePhotoError, {
 					destinationType : navigator.camera.DestinationType.FILE_URI,
-					sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY
+					sourceType : navigator.camera.PictureSourceType.PHOTOLIBRARY,
+					allowEdit: true,
+					targetWidth: 250,
+					targetHeight: 250
 				});
 
 				function onCapturePhotoSuccess(imageData) {
