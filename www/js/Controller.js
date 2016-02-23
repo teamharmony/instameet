@@ -568,6 +568,8 @@ var Controller = function () {
 			$('#btnLogout').off('click', _self.onLogoutClickHandler);
 			$('#btnLogout').on('click', _self.onLogoutClickHandler);
 
+			_self.getMessageMeeting();
+			
 			$('#btnEditProfile').off('click');
 			$('#btnEditProfile').on('click', function (e) {
 				$.mobile.navigate('#page-edit');
@@ -795,7 +797,7 @@ var Controller = function () {
 		},
 
 		profile : function () {
-			
+			//this.$profilePage = $("#page-profile");
 		},
 
 		showProfile : function (uInfo) {
@@ -826,6 +828,8 @@ var Controller = function () {
 			$('#txtToMeeting').val(uInfo.username);
 			$('#txtToNameMeeting').val(uInfo.name);
 			$('#txtToNameMeeting').attr("disabled", "disabled");
+			
+			$("#page-messages").data('sendData', uInfo);
 			$.mobile.navigate('#page-profile');
 		},
 
@@ -993,7 +997,7 @@ var Controller = function () {
 					if (obj.fromUserName !== null) {
 						if (obj.fromStatus !== -1) {
 							if(obj.status === 0){
-								$meetinglist.append("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								$meetinglist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 							} else {
 								$meetinglist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.status + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 							}
@@ -1079,9 +1083,43 @@ var Controller = function () {
 			this.$btnSendMessage.off('click');
 			this.$btnSendMessage.on('click', function (e) {
 				_self.loading("show");
-				var replyMessData = $('#page-messages').data('replyMessData'), sendMessData = {}, parentId, topicId;
-							
-				if(replyMessData){
+					
+				var sendData = $('#page-messages').data('sendData'), sendMessData = {}, parentId, topicId;
+				
+				if(sendData.username){
+					var data = _self.messages[sendData.username];
+					if(data){
+						parentId = data[data.length-1].id;
+						if(data[data.length-1].topicId === -1){
+							topicId = data[data.length-1].id;
+						} else {
+							topicId = data[data.length-1].topicId;
+						}
+						sendMessData = { 'parentId' : parentId,
+										 'topicId': topicId,
+										 'toUserName' : that.$to.val(),
+										 'message' : that.$message.val()
+										};
+					} else {
+						sendMessData = { 'toUserName' : that.$to.val(),
+									 'message' : that.$message.val()
+									};
+					}
+					
+				} else {
+					parentId = sendData[sendData.length-1].id;
+					if(sendData[sendData.length-1].topicId === -1){
+						topicId = sendData[sendData.length-1].id;
+					} else {
+						topicId = sendData[sendData.length-1].topicId;
+					}
+					sendMessData = { 'parentId' : parentId,
+									 'topicId': topicId,
+									 'toUserName' : that.$to.val(),
+									 'message' : that.$message.val()
+									};
+				}
+				/*if(replyMessData){
 					parentId = replyMessData.id;
 					if(replyMessData.topicId === -1){
 						topicId = replyMessData.id;
@@ -1097,7 +1135,7 @@ var Controller = function () {
 					sendMessData = { 'toUserName' : that.$to.val(),
 									 'message' : that.$message.val()
 									};
-				}
+				}*/
 				$.ajax({
 					url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 					type : 'POST',
@@ -1120,7 +1158,7 @@ var Controller = function () {
 
 		messageView : function (e, data) {
 			var that = this;
-			$('#page-messages').removeData('replyMessData');
+			$('#page-messages').removeData('sendData');
 			_self.getMessageMeeting(messageSuccess);
 			$('#message-view').css('display', 'none');
 			$('#messageListView').css('display', 'block');
@@ -1160,7 +1198,8 @@ var Controller = function () {
 					this.$messageViewListItem = $('#messViewList');
 					this.$messageViewListItem.empty();
 					if (obj.tagName === "LI") {
-						var messArr =_self.messages[messData.topicId === -1 ? messData.id : messData.topicId];
+						//var messArr =_self.messages[messData.topicId === -1 ? messData.id : messData.topicId];
+						var messArr = messData;
 						for (var i = 0; i < messArr.length; i++) {
 							if(messArr[i].fromUserName !== null){
 								this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'</li>');
@@ -1169,7 +1208,7 @@ var Controller = function () {
 							}
 							
 							$.ajax({
-								url : hostUrl.concat("/messages/" + messArr[i].id + "?access_token=" + window.bearerToken),
+								url : hostUrl.concat("/messages/" + messArr[messArr.length-1].id + "?access_token=" + window.bearerToken),
 								type : 'PUT',
 								data : {
 									'status' : '1'
@@ -1179,13 +1218,13 @@ var Controller = function () {
 							});
 						}
 
-						$('#uMessName').text(messData.name);
+						$('#uMessName').text(messData[messData.length-1].name);
 											
 						var img = null;
-						if (messData.fromUserName !== null) {
-							img = messData.fromUserName;
+						if (messData[messData.length-1].fromUserName !== null) {
+							img = messData[messData.length-1].fromUserName;
 						} else {
-							img = messData.toUserName;
+							img = messData[messData.length-1].toUserName;
 						}
 
 						$.ajax({
@@ -1197,14 +1236,14 @@ var Controller = function () {
 
 						$('#btnReplyMessage').off('click');
 						$('#btnReplyMessage').on('click', function () {
-							if (messData.fromUserName !== null) {
-								$('#txtTo').val(messData.fromUserName);
+							if (messData[messData.length-1].fromUserName !== null) {
+								$('#txtTo').val(messData[messData.length-1].fromUserName);
 							} else {
-								$('#txtTo').val(messData.toUserName);
+								$('#txtTo').val(messData[messData.length-1].toUserName);
 							}
-							$('#txtToName').val(messData.name);
+							$('#txtToName').val(messData[messData.length-1].name);
 							$('#txtToName').attr("disabled", "disabled");
-							$('#page-messages').data('replyMessData',messData);
+							$('#page-messages').data('sendData',messData);
 							$.mobile.navigate('#page-messages');
 						});
 
@@ -1218,14 +1257,14 @@ var Controller = function () {
 					if (obj.fromUserName !== null) {
 						if (obj.fromStatus !== -1) {
 							if(obj.toStatus === 0){
-								that.$messagelist.append("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								that.$messagelist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 							} else {
 								that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
 							}
 							
 
 							that.$messagelistItem = $('#' + obj.id);
-							that.$messagelistItem.data('messData', obj);
+							that.$messagelistItem.data('messData', this);
 							$.ajax({
 								url : hostUrl + "/profilePic/" + obj.fromUserName,
 								type : 'GET',
@@ -1243,7 +1282,7 @@ var Controller = function () {
 							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
 
 							that.$messagelistItem = $('#' + obj.id);
-							that.$messagelistItem.data('messData', obj);
+							that.$messagelistItem.data('messData', this);
 							$.ajax({
 								url : hostUrl + "/profilePic/" + obj.toUserName,
 								type : 'GET',
@@ -1369,14 +1408,32 @@ var Controller = function () {
 				
 		parseMessages: function(message){
 			var arrMess = {};
-			for(var i=0; i < message.length; i++){
+			jQuery.each(message, function(key, value){
+				console.log(key + ":" + value);
+				if(value.fromUserName !== null){
+					if(!arrMess[value.fromUserName]){
+						arrMess[value.fromUserName] = [];
+						arrMess[value.fromUserName].push(value);
+					} else {
+						arrMess[value.fromUserName].push(value);
+					}
+				} else if(value.toUserName !== null){
+					if(!arrMess[value.toUserName]){
+						arrMess[value.toUserName] = [];
+						arrMess[value.toUserName].push(value);
+					} else {
+						arrMess[value.toUserName].push(value);
+					}
+				}
+			});
+			/*for(var i=0; i < message.length; i++){
 				if(message[i].topicId === -1){
 					arrMess[message[i].id] = [];
 					arrMess[message[i].id].push(message[i]);
 				} else {
 					arrMess[message[i].topicId].push(message[i]);
 				}
-			}
+			}*/
 			return arrMess;
 		},
 		

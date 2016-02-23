@@ -907,7 +907,6 @@ padding: 6px;
 #txtDatetimeMeeting { background:#fff url(../img/calendar.png) 99% center no-repeat; background-size: 27px; }
 
 img{
-	display: block;
     max-width:230px; //as desired
     max-height:95px; // as desired
     width: auto;
