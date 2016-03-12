@@ -2,7 +2,7 @@ var Controller = function () {
 	var hostUrl = "http://vps.hilfe.website:8080/ResourceMgmt",
 	//var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
-	userLoggedIn, watchID;
+	userLoggedIn, watchID, cordova =false;
 	//window.localStorage.instameet_loginBy = "normal";
 
 	var controller = {
@@ -74,11 +74,19 @@ var Controller = function () {
 
 			$(document).delegate("#page-feedback", "pagebeforeshow", function () {
 				_self.feedback();
-				_self.feedback();
 			});			
 		},
 		
 		checkLogin : function () {
+			navigator.geolocation.getCurrentPosition(function(success){
+				
+			}, function(error){
+				function okCallback(){
+					navigator.app.exitApp();
+				};
+				_self._showAlert("Please enable your location services to use InstaMeet.", okCallback);
+			} );
+			
 			_self.initPushwoosh();
 			_self.welcome();
 			if (window.localStorage.instameet_loginBy === "normal") {
@@ -103,16 +111,6 @@ var Controller = function () {
 				});
 			}
 			
-
-			navigator.geolocation.getCurrentPosition(function(success){
-				
-			}, function(error){
-				function okCallback(){
-					navigator.app.exitApp();
-				};
-				_self._showAlert("Please enable your location services to use InstaMeet.", okCallback);
-			} );
-			
 		},
 		
 		directLoginApp : function (loginBy) {
@@ -120,24 +118,27 @@ var Controller = function () {
 				$.mobile.navigate('#page-home');
 				userLoggedIn = window.localStorage.userLogIn;
 				window.localStorage.instameet_loginBy = loginBy;
-				_self.pushNotification.setTags({"instaUsername":userLoggedIn},
-					function(status) {
-						console.warn('setTags success');
-						_self.pushNotification.registerDevice(
-							function(status) {
-								var pushToken = status;
-								console.warn('push token: ' + pushToken);
-								
-							},
-							function(status) {
-								console.warn(JSON.stringify(['failed to register ', status]));
-							}
-						);
-					},
-					function(status) {
-						console.warn('setTags failed');
-					}
-				);
+				if(_self.pushNotification){
+					_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+						function(status) {
+							console.warn('setTags success');
+							_self.pushNotification.registerDevice(
+								function(status) {
+									var pushToken = status;
+									console.warn('push token: ' + pushToken);
+									
+								},
+								function(status) {
+									console.warn(JSON.stringify(['failed to register ', status]));
+								}
+							);
+						},
+						function(status) {
+							console.warn('setTags failed');
+						}
+					);
+				}
+				
 				_self.updateLocation();
 			};
 
@@ -210,24 +211,27 @@ var Controller = function () {
 			window.localStorage.removeItem('fbtoken');
 			window.localStorage.removeItem('gltoken');
 			
-			_self.pushNotification.setTags({"instaUsername":null},
-				function(status) {
-					console.warn('setTags success');
-					_self.pushNotification.unregisterDevice(
-						function(status) {
-							var pushToken = status;
-							console.warn('push token: ' + pushToken);
-							
-						},
-						function(status) {
-							console.warn(JSON.stringify(['failed to register ', status]));
-						}
-					);
-				},
-				function(status) {
-					console.warn('setTags failed');
-				}
-			);
+			if(_self.pushNotification){
+				_self.pushNotification.setTags({"instaUsername":null},
+					function(status) {
+						console.warn('setTags success');
+						_self.pushNotification.unregisterDevice(
+							function(status) {
+								var pushToken = status;
+								console.warn('push token: ' + pushToken);
+								
+							},
+							function(status) {
+								console.warn(JSON.stringify(['failed to register ', status]));
+							}
+						);
+					},
+					function(status) {
+						console.warn('setTags failed');
+					}
+				);
+			}
+			
 		},
 		
 		welcome : function () {
@@ -320,24 +324,26 @@ var Controller = function () {
 			this.data = data;
 			this.social = social;
 			function loginSuccess() {
-				_self.pushNotification.setTags({"instaUsername":userLoggedIn},
-					function(status) {
-						console.warn('setTags success');
-						_self.pushNotification.registerDevice(
-							function(status) {
-								var pushToken = status;
-								console.warn('push token: ' + pushToken);
-								
-							},
-							function(status) {
-								console.warn(JSON.stringify(['failed to register ', status]));
-							}
-						);
-					},
-					function(status) {
-						console.warn('setTags failed');
-					}
-				);
+				if(_self.pushNotification){
+					_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+						function(status) {
+							console.warn('setTags success');
+							_self.pushNotification.registerDevice(
+								function(status) {
+									var pushToken = status;
+									console.warn('push token: ' + pushToken);
+									
+								},
+								function(status) {
+									console.warn(JSON.stringify(['failed to register ', status]));
+								}
+							);
+						},
+						function(status) {
+							console.warn('setTags failed');
+						}
+					);
+				}				
 				_self.loading('hide');
 				$.mobile.navigate("#page-home");
 				window.localStorage.userLogIn = userLoggedIn = that.social+'_'+that.data.email;
@@ -368,57 +374,90 @@ var Controller = function () {
 			this.data = data;
 			this.social = social;
 			this.profilePic = null;
-			$.ajax({
-				url: "https://graph.facebook.com/"+data.id+"/picture?redirect=false",
-				params:{'type':'normal'},
-				type: 'GET'
-			}).done(function(data){
-				var image = new Image();
-				image.setAttribute('crossOrigin', 'anonymous');
-				image.onload = function () {
-					var canvas = document.createElement('canvas');
-					canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-					canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
+			if(social === 'fb'){
+				$.ajax({
+					url: "https://graph.facebook.com/"+data.id+"/picture?redirect=false&type=large",
+					type: 'GET'
+				}).done(function(data){
+					var image = new Image();
+					image.setAttribute('crossOrigin', 'anonymous');
+					image.onload = function () {
+						var canvas = document.createElement('canvas');
+						canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
+						canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
 
-					canvas.getContext('2d').drawImage(this, 0, 0);
-					that.profilePic = canvas.toDataURL('image/png');
-					
-					if(that.data.email){
-						formData.append('name', that.data.name);
-						formData.append('email', that.data.email+'_'+new Date().getTime());
-						if(that.social === 'fb'){
-							formData.append('username', 'fb_'+that.data.email);
-							formData.append('password','fbUser');
-						} else if(that.social === 'gl'){
-							formData.append('username', 'gl_'+that.data.email);
-							formData.append('password','glUser');
-						}
-						formData.append('skills', '');
-						formData.append('contact', '');
-						formData.append('visible', '1');
-						if(that.profilePic !== null){
-							formData.append('profilePic', _self.dataURItoBlob(that.profilePic));
+						canvas.getContext('2d').drawImage(this, 0, 0);
+						that.profilePic = canvas.toDataURL('image/png');
+						
+						if(that.data.email){
+							formData.append('name', that.data.name);
+							formData.append('email', that.data.email+'_'+new Date().getTime());
+							if(that.social === 'fb'){
+								formData.append('username', 'fb_'+that.data.email);
+								formData.append('password','fbUser');
+							} else if(that.social === 'gl'){
+								formData.append('username', 'gl_'+that.data.email);
+								formData.append('password','glUser');
+							}
+							formData.append('skills', '');
+							formData.append('contact', '');
+							formData.append('visible', '1');
+							if(that.profilePic !== null){
+								formData.append('profilePic', _self.dataURItoBlob(that.profilePic));
+							}
+							
+							$.ajax({
+								url : hostUrl + "/resources",
+								type : 'POST',
+								data : formData,
+								processData : false,
+								contentType : false
+							}).done(function (data) {
+								_self.processSocialLogin(that.data, that.social);
+							}).fail(function (jqXHR, textStatus, errorThrown) {
+								_self.loading("hide");
+							});
+						} else {
+							_self._showAlert('App is not able to fetch your details. Please check your account settings.');
 						}
 						
-						$.ajax({
-							url : hostUrl + "/resources",
-							type : 'POST',
-							data : formData,
-							processData : false,
-							contentType : false
-						}).done(function (data) {
-							_self.processSocialLogin(that.data, that.social);
-						}).fail(function (jqXHR, textStatus, errorThrown) {
-							_self.loading("hide");
-						});
-					} else {
-						_self._showAlert('App is not able to fetch your details. Please check your account settings.');
+					};
+
+					image.src = data.data.url;
+				});
+			} else {
+				if(that.data.email){
+					formData.append('name', that.data.name);
+					formData.append('email', that.data.email+'_'+new Date().getTime());
+					if(that.social === 'fb'){
+						formData.append('username', 'fb_'+that.data.email);
+						formData.append('password','fbUser');
+					} else if(that.social === 'gl'){
+						formData.append('username', 'gl_'+that.data.email);
+						formData.append('password','glUser');
+					}
+					formData.append('skills', '');
+					formData.append('contact', '');
+					formData.append('visible', '1');
+					if(that.profilePic !== null){
+						formData.append('profilePic', _self.dataURItoBlob(that.profilePic));
 					}
 					
-				};
-
-				image.src = data.data.url;
-			});
+					$.ajax({
+						url : hostUrl + "/resources",
+						type : 'POST',
+						data : formData,
+						processData : false,
+						contentType : false
+					}).done(function (data) {
+						_self.processSocialLogin(that.data, that.social);
+					}).fail(function (jqXHR, textStatus, errorThrown) {
+						_self.loading("hide");
+					});
+				} else {
+					_self._showAlert('App is not able to fetch your details. Please check your account settings.');
+				}
+			}
 		},
 		
 		
@@ -437,24 +476,27 @@ var Controller = function () {
 				function loginSuccess() {
 					_self.isResetPassRequired();
 					window.localStorage.instameet_loginBy = "normal";
-					_self.pushNotification.setTags({"instaUsername":userLoggedIn},
-						function(status) {
-							console.warn('setTags success');
-							_self.pushNotification.registerDevice(
-								function(status) {
-									var pushToken = status;
-									console.warn('push token: ' + pushToken);
-									
-								},
-								function(status) {
-									console.warn(JSON.stringify(['failed to register ', status]));
-								}
-							);
-						},
-						function(status) {
-							console.warn('setTags failed');
-						}
-					);
+					if(_self.pushNotification){
+						_self.pushNotification.setTags({"instaUsername":userLoggedIn},
+							function(status) {
+								console.warn('setTags success');
+								_self.pushNotification.registerDevice(
+									function(status) {
+										var pushToken = status;
+										console.warn('push token: ' + pushToken);
+										
+									},
+									function(status) {
+										console.warn(JSON.stringify(['failed to register ', status]));
+									}
+								);
+							},
+							function(status) {
+								console.warn('setTags failed');
+							}
+						);
+					}
+					
 					_self.updateLocation();
 				};
 
@@ -647,7 +689,11 @@ var Controller = function () {
 			$('#search-input').off("change");
 			$('#search-input').change(function (event) {
 				_self.loading("show");
-				var obj = $(this);
+				_self.search(event);
+			});
+			
+			$('#search-choice').change(function(event){
+				_self.loading("show");
 				_self.search(event);
 			});
 		},
@@ -763,7 +809,7 @@ var Controller = function () {
 
 					$listItem = $('#lstItem-' + i);
 					$listItem.data('user', obj);
-					if(obj.username.indexOf('fb') !==-1){
+					if(obj.username.indexOf('fb') !==-1 || obj.username.indexOf('gl') !==-1){
 						$listItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.username);
 					} else {
 						$.ajax({
@@ -811,7 +857,7 @@ var Controller = function () {
 			var uDist = map.getDistanceFromLatLng(p1, p2);
 
 			$('#imgProfileUser').attr('src', 'img/defaultImg.png');
-			if(uInfo.username.indexOf('fb') !==-1){
+			if(uInfo.username.indexOf('fb') !==-1 || uInfo.username.indexOf('gl') !==-1){
 				$('#imgProfileUser').attr('src', hostUrl + "/profilePic/" + uInfo.username);
 			} else {
 				$.ajax({
@@ -859,18 +905,34 @@ var Controller = function () {
 			
 			this.$btnSendMeetingReq = $('#btnSendMeetingReq', this.$meetings);
 			
-			/*this.$datetimeMeeting.off('focusout');
+			$("#dtBox", this.$meetings).DateTimePicker(
+			{
+				dateTimeFormat: "yyyy-MM-dd hh:mm AA",
+				addEventHandlers: function()
+				{
+					var oDTP = this;
+				
+					oDTP.settings.minDateTime = oDTP.getDateTimeStringInFormat("DateTime", "yyyy-MM-dd hh:mm:ss AA", new Date());
+				},
+				init: function()
+				{
+					var oDTP = this;
+					oDTP.setDateTimeStringInInputField();
+				}
+			});
+			
+			this.$datetimeMeeting.off('focusout');
 			this.$datetimeMeeting.on('focusout', function(event){
 				var val = event.currentTarget.value.replace("T", " ").replace("Z", ""),
 				enterDate = new Date(val).getTime()
 				now = new Date().getTime();
 				that.$datetimeMeeting.removeClass("invalidInp");
 				that.$errorDT.addClass("display");
-				if((enterDate - now) < 1800000){
+				if((enterDate - now) < 0){
 					that.$datetimeMeeting.addClass("invalidInp");
 					that.$errorDT.removeClass("display");
 				}
-			});*/
+			});
 			
 			this.$btnSendMeetingReq.off('click');
 			this.$btnSendMeetingReq.on('click', function (e) {
@@ -934,6 +996,7 @@ var Controller = function () {
 					var obj = evt.currentTarget,
 					meetingObj;
 					if (obj.tagName === "LI") {
+						$('#meetingUPic').attr('src', 'img/defaultImg.png');
 						for (var i = 0; i < _self.meetings.length; i++) {
 							if (_self.meetings[i].id === parseInt(obj.id)) {
 								meetingObj = _self.meetings[i];
@@ -948,7 +1011,7 @@ var Controller = function () {
 							img = meetingObj.toUserName;
 						}
 						
-						if(img.indexOf('fb') !==-1){
+						if(img.indexOf('fb') !==-1 || img.indexOf('gl') !==-1){
 							$('#meetingUPic').attr('src', hostUrl + "/profilePic/" + img);
 						} else {
 							$.ajax({
@@ -1025,7 +1088,7 @@ var Controller = function () {
 							
 
 							$meetinglistItem = $('#' + obj.id);
-							if(obj.fromUserName.indexOf('fb') !==-1){
+							if(obj.fromUserName.indexOf('fb') !==-1 || obj.fromUserName.indexOf('gl') !==-1){
 								$meetinglistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.fromUserName);
 							} else {
 								$.ajax({
@@ -1047,7 +1110,7 @@ var Controller = function () {
 							$meetinglist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-agenda'>" + obj.agenda + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
 
 							$meetinglistItem = $('#' + obj.id);
-							if(obj.toUserName.indexOf('fb') !==-1){
+							if(obj.toUserName.indexOf('fb') !==-1 || obj.toUserName.indexOf('gl') !==-1){
 								$meetinglistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.toUserName);
 							} else {
 								$.ajax({
@@ -1258,7 +1321,8 @@ var Controller = function () {
 							img = messData[messData.length-1].toUserName;
 						}
 
-						if(img.indexOf('fb') !==-1){
+						$('#messageUPic').attr('src', 'img/defaultImg.png');
+						if(img.indexOf('fb') !==-1 || img.indexOf('gl') !==-1){
 							$('#messageUPic').attr('src', hostUrl + "/profilePic/" + img);
 						} else {
 							$.ajax({
@@ -1305,7 +1369,7 @@ var Controller = function () {
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
 							
-							if(obj.fromUserName.indexOf('fb') !==-1){
+							if(obj.fromUserName.indexOf('fb') !==-1 || obj.fromUserName.indexOf('gl') !==-1){
 								that.$messagelistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.fromUserNames);
 							} else {
 								$.ajax({
@@ -1329,7 +1393,7 @@ var Controller = function () {
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
 							
-							if(obj.toUserName.indexOf('fb') !==-1){
+							if(obj.toUserName.indexOf('fb') !==-1 || obj.toUserName.indexOf('gl') !==-1){
 								that.$messagelistItem.find('img').attr('src', hostUrl + "/profilePic/" + obj.toUserName);
 							} else {
 								$.ajax({
@@ -1441,13 +1505,18 @@ var Controller = function () {
 		},
 		
 		_cancelMeetingLocalNotification: function(){
-			cordova.plugins.notification.local.cancelAll(function(){
-				console.log("All notiication are canceled.");
-			});
+			if(cordova){
+				cordova.plugins.notification.local.cancelAll(function(){
+					console.log("All notiication are canceled.");
+				});
+			}
+			
 		},
 		
 		_scheduleMeetingLocalNotification: function(arrSchedule){
-			cordova.plugins.notification.local.schedule(arrSchedule);
+			if(cordova){
+				cordova.plugins.notification.local.schedule(arrSchedule);
+			}
 			/*cordova.plugins.notification.local.on("trigger",function(notification){
 				if(notification.id.search('beforeHour') != -1){
 					_self._showAlert("You have a meeting with "+notification.name+" in 60 minutes");
@@ -1587,7 +1656,7 @@ var Controller = function () {
 
 				that.editPic = null;
 
-				if(user.username.indexOf('fb') !==-1){
+				if(user.username.indexOf('fb') !==-1 || user.username.indexOf('gl') !==-1){
 					$('#imgEditDisp', this.$editpage).find('img').attr('src', hostUrl + "/profilePic/" + user.username);
 				} else {
 					$.ajax({
@@ -1962,34 +2031,35 @@ var Controller = function () {
 		},
 		
 		initPushwoosh: function(){
-			//console.log("Inside initPushwoosh");
-			var pushNotification = cordova.require("com.pushwoosh.plugins.pushwoosh.PushNotification");
-			_self.pushNotification = pushNotification;
-			//set push notifications handler
-			document.addEventListener('push-notification', function(event) {
-				var title = event.notification.title;
-				var userData = event.notification.userdata;
-										 
-				if(typeof(userData) != "undefined") {
-					console.warn('user data: ' + JSON.stringify(userData));
-				}
+			if(cordova){
+				var pushNotification = cordova.require("com.pushwoosh.plugins.pushwoosh.PushNotification");
+				_self.pushNotification = pushNotification;
+				//set push notifications handler
+				document.addEventListener('push-notification', function(event) {
+					var title = event.notification.title;
+					var userData = event.notification.userdata;
 											 
-				console.log(event.notification);
-			});
-		 
-			//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.
-			pushNotification.onDeviceReady({ projectid: "105396803775", pw_appid : "EB3A4-8E46D"});
-		 
-			//register for pushes
-			/*pushNotification.registerDevice(
-				function(status) {
-					var pushToken = status;
-					console.warn('push token: ' + pushToken);
-				},
-				function(status) {
-					console.warn(JSON.stringify(['failed to register ', status]));
-				}
-			);*/
+					if(typeof(userData) != "undefined") {
+						console.warn('user data: ' + JSON.stringify(userData));
+					}
+												 
+					console.log(event.notification);
+				});
+			 
+				//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.
+				pushNotification.onDeviceReady({ projectid: "105396803775", pw_appid : "EB3A4-8E46D"});
+			 
+				//register for pushes
+				/*pushNotification.registerDevice(
+					function(status) {
+						var pushToken = status;
+						console.warn('push token: ' + pushToken);
+					},
+					function(status) {
+						console.warn(JSON.stringify(['failed to register ', status]));
+					}
+				);*/
+			}
 		}
 	};
 

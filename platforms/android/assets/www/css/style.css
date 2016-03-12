@@ -913,3 +913,29 @@ img{
     height: auto;
 
 }
+
+.messageview {
+    height: 100%;
+	position: relative;
+}
+
+.messageview .msgBox {    
+	position: absolute;
+    left: 0;
+    right: 0;
+      bottom: 60px;
+    top: 255px;
+ }
+.messageview .msgBox .messageList {   
+	height: calc(100% - 55px);
+      overflow-y: auto;
+}
+.messageview .btnReplyMessage  { 
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.msgBox .messageList .messageRecieve, .msgBox .messageList .messageSend { 
+ padding: 11px; /* change padding from 15px to 11px; */
+}

@@ -1,0 +1,67 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {
+            "config.xml": {
+                "parents": {
+                    "/*": [
+                        {
+                            "xml": "<feature name=\"Camera\"><param name=\"browser-package\" value=\"Camera\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Device\"><param name=\"browser-package\" value=\"Device\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<preference name=\"AndroidPersistentFileLocation\" value=\"Internal\" />",
+                            "count": 1
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "installed_plugins": {
+        "com.pushwoosh.plugins.pushwoosh": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-camera": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-device": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-dialogs": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-geolocation": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-inappbrowser": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-network-information": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-registerusernotificationsettings": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-splashscreen": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        },
+        "de.appplant.cordova.plugin.local-notification": {
+            "PACKAGE_NAME": "com.prj.instameet"
+        }
+    },
+    "dependent_plugins": {}
+}
