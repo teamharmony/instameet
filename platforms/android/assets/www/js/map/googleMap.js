@@ -2,7 +2,7 @@ var map = {
 	_map: null, _selfMap: null, _markersArray: [],
 	init: function(successCallback, errorCallback, markerClickHandler){
 		_selfMap = this;
-		_map = null;
+		_map = null, positionId = null;
 		/*if(!!document.getElementById("mapScript")){
 			document.body.removeChild(document.getElementById("mapScript"));
 		}*/
@@ -24,9 +24,14 @@ var map = {
 	
 	load: function() {
 		console.log('Map loaded successfull');
-		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
+		positionId = navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
 	},
 	onError: function(error){
+		if(positionId){
+			navigator.geolocation.clearWatch(positionId);
+			positionId = null;
+		}
+
 		if(error.code === 1){
 			var mapOptions = {
 				zoom: 2,
@@ -40,6 +45,11 @@ var map = {
 		
 	},
 	onSuccess: function(position){
+		if(positionId){
+			navigator.geolocation.clearWatch(positionId);
+			positionId = null;
+		}
+
 		var lat = position.coords.latitude,
 			lng = position.coords.longitude;
 		
@@ -71,16 +81,24 @@ var map = {
 				var marker = new google.maps.Marker({
 					position: latlng,
 					map: _map,
-					data: obj
+					customData: obj
 				});
 				
 				_selfMap._markersArray.push(marker);
 			 
-				google.maps.event.addListener(marker, 'click', jQuery.proxy(function() {
-					_selfMap.markerClickHandler(this);
-					//infowindow.setContent(_selfMap.infoWindowContent(this.data));
-					//infowindow.open(_map, this);				
-				}, obj));
+				google.maps.event.addListener(marker, 'click', function(event) {
+					var that = this;
+					function infoWindowCallback(content){
+						infowindow.setContent(content);
+						infowindow.open(_map, that);
+						_map.setCenter(that.getPosition());
+					};
+					_selfMap.infoWindowContent(this.customData, infoWindowCallback);				
+				});
+
+				google.maps.event.addListener(marker, 'dblclick', function(event) {
+					_selfMap.markerClickHandler(this.customData);					
+				});
 			}
 		}
 		_map.fitBounds(bounds);
@@ -93,24 +111,31 @@ var map = {
 		_selfMap._markersArray = [];
 	},
 	
-	infoWindowContent: function(data){
-		var imgUrl = "http://resourcemgmt.cfapps.io/profilePic/"+ data.username;
-		var content = '<div id="iw-container">' +
-						'<div class="iw-title">'+ data.name +'</div>' +
-							'<div class="iw-content">' +
-								'<img src="'+imgUrl+'" height="75" width="75">' +
-								'<p>Skills : '+ data.skills +'</p>' +
-								
-							'</div>' +
-						'<div class="iw-bottom-gradient"></div>' +
+	infoWindowContent: function(data, infoWindowCallback){
+		var latlng = {
+					"latitude" : data.latitude,
+					"longitude" : data.longitude
+				}, content;
+
+		function geocodeClbk(address) {
+			content = '<div>' +
+						'<div>'+ data.name +'</div>' +
+						'<div>' +
+							'<p>City : '+ address +'</p>' +
+							'<p>Skills : '+ data.skills +'</p>' +	
+						'</div>' +
 					'</div>';
-		return content;
+			infoWindowCallback(content);
+		}
+
+		_selfMap.geocodeLatLong(latlng, geocodeClbk);
+		
 	},
 	
 	getLatlongAddress: function(address, onGeoSuccess){
 		var geocoder = new google.maps.Geocoder();
 		geocoder.geocode( { 'address': address}, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
+			if ( status == google.maps.GeocoderStatus.OK) {
 				//alert(results[0].geometry.location.lat() + ":" + results[0].geometry.location.lng());
 				onGeoSuccess(results[0].geometry.location.lat(), results[0].geometry.location.lng());
 			} else {

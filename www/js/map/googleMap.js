@@ -2,7 +2,7 @@ var map = {
 	_map: null, _selfMap: null, _markersArray: [],
 	init: function(successCallback, errorCallback, markerClickHandler){
 		_selfMap = this;
-		_map = null;
+		_map = null, positionId = null;
 		/*if(!!document.getElementById("mapScript")){
 			document.body.removeChild(document.getElementById("mapScript"));
 		}*/
@@ -24,9 +24,14 @@ var map = {
 	
 	load: function() {
 		console.log('Map loaded successfull');
-		navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
+		positionId = navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError );//{timeout: 10000});
 	},
 	onError: function(error){
+		if(positionId){
+			navigator.geolocation.clearWatch(positionId);
+			positionId = null;
+		}
+
 		if(error.code === 1){
 			var mapOptions = {
 				zoom: 2,
@@ -40,6 +45,11 @@ var map = {
 		
 	},
 	onSuccess: function(position){
+		if(positionId){
+			navigator.geolocation.clearWatch(positionId);
+			positionId = null;
+		}
+
 		var lat = position.coords.latitude,
 			lng = position.coords.longitude;
 		
@@ -77,6 +87,7 @@ var map = {
 				_selfMap._markersArray.push(marker);
 			 
 				google.maps.event.addListener(marker, 'click', function(event) {
+					var that = this;
 					function infoWindowCallback(content){
 						infowindow.setContent(content);
 						infowindow.open(_map, that);

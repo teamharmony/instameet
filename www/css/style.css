@@ -12,7 +12,6 @@ body {
 :focus {
 	/*border: 1px solid #86EDFC !important;*/
 }
-
 /*.ui-content{
  background: #00A2D8;
  position:absolute;
@@ -179,7 +178,7 @@ border:1px solid #34740e; color: #FFFFFF;
 	border-radius: 4px;
 	position: relative;
 	background-color: #105182;
-	font-size: 14px;
+	/*font-size: 14px;*/
 	text-shadow: none;
 	height: 24px;
 	width: 24px !important;
@@ -452,9 +451,13 @@ border:1px solid #34740e; color: #FFFFFF;
     color: #fff;
     font-size: 16px;
     top: .6em;
-    left: 46px;
+    left: 46px;.ui-header .iconBtnMsg .iconBtn
 		    text-shadow: 1px 1px 1px #333;
 				padding-top: 5px;
+				white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    right: 120px;
 }
 .homescreen .searchIcon {
 
@@ -779,12 +782,12 @@ background: rgba(136, 183, 213, 0.8);*/
 background:#88b7d5;
 }
 .messRecieve1 .recieveIcon  { color:red; }
-.unReadMessage, .unReadMessage list-name, .unReadMessage list-agenda { background:#5FB9F2; font-weight:bold; }
+.unReadMessage { background:#5FB9F2; font-weight:bold; }
 .messSend {
     background:#88b7d5;
    /* opacity: 0.5;*/
 }
-.messSend .sentIcon { color: green }
+.messSend .semtIcon { color: green }
 div#search-choice-listbox {
     min-width: 6em;
 }
@@ -853,37 +856,3 @@ padding: 6px;
 /*meetings */ 
 .ui-input-text input[type="datetime-local"], 
 #txtDatetimeMeeting { background:#fff url(../img/calendar.png) 99% center no-repeat; background-size: 27px; }
-
-img{
-    max-width:230px; //as desired
-    max-height:95px; // as desired
-    width: auto;
-    height: auto;
-
-}
-
-.messageview {
-    height: 100%;
-	position: relative;
-}
-
-.messageview .msgBox {    
-	position: absolute;
-    left: 0;
-    right: 0;
-      bottom: 60px;
-    top: 255px;
- }
-.messageview .msgBox .messageList {   
-	height: calc(100% - 55px);
-      overflow-y: auto;
-}
-.messageview .btnReplyMessage  { 
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-.msgBox .messageList .messageRecieve, .msgBox .messageList .messageSend { 
- padding: 11px; /* change padding from 15px to 11px; */
-}

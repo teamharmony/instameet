@@ -78,14 +78,14 @@ var Controller = function () {
 		},
 		
 		checkLogin : function () {
-			navigator.geolocation.getCurrentPosition(function(success){
+			/*navigator.geolocation.getCurrentPosition(function(success){
 				
 			}, function(error){
 				function okCallback(){
 					navigator.app.exitApp();
 				};
 				_self._showAlert("Please enable your location services to use InstaMeet.", okCallback);
-			} );
+			} );*/
 			
 			_self.initPushwoosh();
 			_self.welcome();
@@ -139,7 +139,7 @@ var Controller = function () {
 					);
 				}
 				
-				_self.updateLocation();
+				//_self.updateLocation();
 			};
 
 			function refreshTokenFailure() {
@@ -348,7 +348,7 @@ var Controller = function () {
 				$.mobile.navigate("#page-home");
 				window.localStorage.userLogIn = userLoggedIn = that.social+'_'+that.data.email;
 				window.localStorage.instameet_loginBy = that.social;
-				_self.updateLocation();
+				//_self.updateLocation();
 			};
 
 			function refreshTokenFailure() {
@@ -497,7 +497,7 @@ var Controller = function () {
 						);
 					}
 					
-					_self.updateLocation();
+					//_self.updateLocation();
 				};
 
 				function refreshTokenFailure() {
@@ -567,43 +567,11 @@ var Controller = function () {
 				e.preventDefault();
 			});
 		},
-		
-		onLocationError : function (error) {
-			console.log('code: ' + error.code + '\n' + 'message: ' + error.message + '\n');
-		},
-
-		updateLocation : function () {
-			/*if (watchID != null) {
-				navigator.geolocation.clearWatch(watchID);
-				watchID = null;
-			}
-			
-			var options = {enableHighAccuracy: true, timeout: 5000, maximumAge: 0, desiredAccuracy: 0, frequency: 1 };*/
-			
-			/*watchID =*/ navigator.geolocation.getCurrentPosition(function (position) {
-				var lat = position.coords.latitude,
-				lon = position.coords.longitude;
-				_self._latlng = {
-					"latitude" : lat,
-					"longitude" : lon
-				};
-
-				$.ajax({
-					url : hostUrl.concat("/resources/updateLocation?access_token=" + window.bearerToken),
-					type : 'PUT',
-					data : _self._latlng
-				}).done(function (data, textStatus, jqXHR) {
-					console.log("location updated successfully.");
-				}).fail(function(){
-					console.log("Location Error.");
-				});
-			}, _self.onLocationError);
-
-		},
 
 		homeview : function () {
 			var that = this;
 			this.$homePage = $('#page-home');
+
 			$('#btnSearch').off('click', _self.onSearchClick);
 			$('#btnSearch').on('click', _self.onSearchClick);
 
@@ -611,21 +579,30 @@ var Controller = function () {
 			$('#btnLogout').on('click', _self.onLogoutClickHandler);
 
 			_self.getMessageMeeting();
-			
+
 			$('#btnEditProfile').off('click');
 			$('#btnEditProfile').on('click', function (e) {
 				$.mobile.navigate('#page-edit');
 			});
+
+			if (watchID != null) {
+				navigator.geolocation.clearWatch(watchID);
+				watchID = null;
+			}
 			
+			_self.loading("show");
 			$.ajax({
 				url : hostUrl.concat("/resources/fetch?access_token=" + window.bearerToken),
 				type : 'GET',
 			}).done(function (data, textStatus, jqXHR) {
 				$('#title', that.$homePage).text('Welcome ' + data.name + ' !!');
+				_self._latlng = {
+					"latitude" : data.latitude,
+					"longitude" : data.longitude
+				};
+
+				map.init(_self.onMapSuccess, _self.onMapError, _self.markerClickHandler);
 			});
-			
-			_self.loading("show");
-			map.init(_self.onMapSuccess, _self.onMapError, _self.markerClickHandler);
 		},
 		
 		markerClickHandler: function(data){
@@ -640,38 +617,91 @@ var Controller = function () {
 		},
 		
 		onMapSuccess : function (lat, lng) {
-			_self._latlng = {
-				"latitude" : lat,
-				"longitude" : lng
-			};
-			
-			var obj = map.getLatLongRange(_self._latlng.latitude, _self._latlng.longitude);
-			$.ajax({
-				url : hostUrl.concat("/search/location"),
-				type : 'GET',
-				data : obj
-			}).done(function (user) {
-				if (user.length > 0) {
-					map.showOnMap(user, userLoggedIn);
-					_self.renderListView(user);
-				}
-				_self.loading("hide");
-			});
-				
-			/*$.ajax({
-				url : hostUrl.concat("/resources/updateLocation?access_token=" + window.bearerToken),
-				type : 'PUT',
-				data : _self._latlng
-			}).done(function (data, textStatus, jqXHR) {
-				updateCallback();
-				//console.log("location updated successfully.");
-			});
-			
-			function updateCallback(){
-				
-			}*/
-			
 
+			var that = this;
+			if($('#btnTrackMe').text() === 'Track me on'){
+				_self.updateLocation();
+			}
+		
+			$('#btnTrackMe').off('click');
+			$('#btnTrackMe').on('click', function(){
+				var text = $('#btnTrackMe').text();
+				if(text === 'Track me on'){
+					$('#btnTrackMe').text('Track me off');
+					if (watchID != null) {
+						navigator.geolocation.clearWatch(watchID);
+						watchID = null;
+					}
+				} else {
+					$('#btnTrackMe').text('Track me on');
+					_self.updateLocation();
+				}
+			});
+			//_self.updateLocation();
+			this.latlng = {'lat': lat, 'lng': lng};
+
+			if($('#search-input').val() !== ""){
+				var selectValue = $('#search-choice').val();
+				if (selectValue === 'name') {
+					_self.searchByName();
+				} else if (selectValue === 'skill') {
+					_self.searchBySkill();
+				} else if (selectValue === 'city') {
+					_self.searchByLocation();
+				}
+			} else {
+				var obj = map.getLatLongRange(lat, lng);
+				$.ajax({
+					url : hostUrl.concat("/search/location"),
+					type : 'GET',
+					data : obj
+				}).done(function (user) {
+					if (user.length > 0) {
+						map.showOnMap(user, userLoggedIn);
+						_self.renderListView(user, that.latlng);
+					}
+					_self.loading("hide");
+				});	
+			}
+
+		},
+
+		onLocationError : function (error) {
+			console.log('code: ' + error.code + '\n' + 'message: ' + error.message + '\n');
+		},
+
+		updateLocation : function () {
+					
+			var options = {enableHighAccuracy: true, maximumAge: 0, desiredAccuracy: 0 };
+			
+			watchID = navigator.geolocation.watchPosition(function (position) {
+				var lat = position.coords.latitude,
+				lon = position.coords.longitude;
+
+				var p1 = new google.maps.LatLng(_self._latlng.latitude, _self._latlng.longitude);
+				var p2 = new google.maps.LatLng(lat, lon);
+
+				var dist = Math.round(google.maps.geometry.spherical.computeDistanceBetween(p1, p2)/1000);
+
+				if(dist > 50){
+					_self._latlng = {
+						"latitude" : lat,
+						"longitude" : lon
+					};
+
+					$.ajax({
+						url : hostUrl.concat("/resources/updateLocation?access_token=" + window.bearerToken),
+						type : 'PUT',
+						data : _self._latlng
+					}).done(function (data, textStatus, jqXHR) {
+						console.log("location updated successfully.");
+					}).fail(function(){
+						console.log("Location Error.");
+					});
+				}
+			}, _self.onLocationError, options);
+				
+				
 		},
 
 		onSearchClick : function () {
@@ -682,10 +712,9 @@ var Controller = function () {
 			$('#btnBack').on('click', function (evt) {
 				_self.setSearchView(false);
 			});
-			$('#search-input').val("");
-			/*$('#radio-choice-h-2a').prop("checked", true);
-			$('#radio-choice-h-2b').prop("checked", false);
-			$('#radio-choice-h-2c').prop("checked", false);*/
+
+			//$('#search-input').val("");
+			
 			$('#search-input').off("change");
 			$('#search-input').change(function (event) {
 				_self.loading("show");
@@ -790,7 +819,7 @@ var Controller = function () {
 
 		},
 
-		renderListView : function (data) {
+		renderListView : function (data, oLatlng) {
 
 			$list = $('#list');
 			$list.empty();
@@ -802,7 +831,12 @@ var Controller = function () {
 				var obj = data[i];
 				if (obj.username !== userLoggedIn) {
 					var p1 = map.getLatLng(obj.latitude, obj.longitude);
-					var p2 = map.getLatLng(_self._latlng.latitude, _self._latlng.longitude);
+					if(oLatlng){
+						var p2 = map.getLatLng(oLatlng.lat, oLatlng.lng);
+					} else {
+						var p2 = map.getLatLng(_self._latlng.latitude, _self._latlng.longitude);
+					}
+					
 					var uDist = map.getDistanceFromLatLng(p1, p2);
 
 					$list.append("<li class='listItem' id='lstItem-" + i + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png'/></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-skill'>" + obj.skills + " </p><p class='list-miles'>" + uDist + " miles away!</p></div></li>");
@@ -1178,7 +1212,8 @@ var Controller = function () {
 			this.$btnSendMessage.on('click', function (e) {
 				_self.loading("show");
 					
-				var sendData = $('#page-messages').data('sendData'), sendMessData = {}, parentId, topicId;
+				var sendData = $('#page-messages').data('sendData'), sendMessData = {}, parentId, topicId,
+				dateTime = new Date();
 				
 				if(sendData.username){
 					var data = _self.messages[sendData.username];
@@ -1192,11 +1227,13 @@ var Controller = function () {
 						sendMessData = { 'parentId' : parentId,
 										 'topicId': topicId,
 										 'toUserName' : that.$to.val(),
-										 'message' : that.$message.val()
+										 'message' : that.$message.val(),
+										 'dateTime' : Math.round(dateTime.getTime()/1000)
 										};
 					} else {
 						sendMessData = { 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
+									 'message' : that.$message.val(),
+									 'dateTime' : Math.round(dateTime.getTime()/1000)
 									};
 					}
 					
@@ -1210,26 +1247,11 @@ var Controller = function () {
 					sendMessData = { 'parentId' : parentId,
 									 'topicId': topicId,
 									 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
+									 'message' : that.$message.val(),
+									 'dateTime' : Math.round(dateTime.getTime()/1000)
 									};
 				}
-				/*if(replyMessData){
-					parentId = replyMessData.id;
-					if(replyMessData.topicId === -1){
-						topicId = replyMessData.id;
-					} else {
-						topicId = replyMessData.topicId;
-					}
-					sendMessData = { 'parentId' : parentId,
-									 'topicId': topicId,
-									 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
-									};
-				} else {
-					sendMessData = { 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
-									};
-				}*/
+				
 				$.ajax({
 					url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 					type : 'POST',
@@ -1295,10 +1317,12 @@ var Controller = function () {
 						//var messArr =_self.messages[messData.topicId === -1 ? messData.id : messData.topicId];
 						var messArr = messData;
 						for (var i = 0; i < messArr.length; i++) {
+							var dt = new Date();
+							dt.setTime(messArr[i].datetime*1000);
 							if(messArr[i].fromUserName !== null){
-								this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'</li>');
+								this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'<span class="datetime">'+ dt.toLocaleString() +'</span></li>');
 							} else {
-								this.$messageViewListItem.append('<li class="messageSend">'+ messArr[i].message +'</li>');
+								this.$messageViewListItem.append('<li class="messageSend">'+ messArr[i].message +'<span class="datetime">'+ dt.toLocaleString() +'</span></li>');
 							}
 							
 							$.ajax({
@@ -1357,12 +1381,15 @@ var Controller = function () {
 				
 				$.each(_self.messages, function(index, value){
 					var obj =this[this.length - 1];
+					var dt = new Date();
+					dt.setTime(obj.datetime*1000);
+
 					if (obj.fromUserName !== null) {
 						if (obj.fromStatus !== -1) {
 							if(obj.toStatus === 0){
-								that.$messagelist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								that.$messagelist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 							} else {
-								that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 							}
 							
 
@@ -1388,7 +1415,7 @@ var Controller = function () {
 					}
 					if (obj.toUserName !== null) {
 						if (obj.toStatus !== -1) {
-							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
+							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
@@ -2018,16 +2045,19 @@ var Controller = function () {
 		},
 		
 		_showAlert: function(message, callback){
-			if(callback){
-				navigator.notification.alert(message, callback, 'InstaMeet', 'OK')
-			} else {
-				navigator.notification.alert(message, null, 'InstaMeet', 'OK')
+			if(navigator.notification){
+				if(callback){
+					navigator.notification.alert(message, callback, 'InstaMeet', 'OK')
+				} else {
+					navigator.notification.alert(message, null, 'InstaMeet', 'OK')
+				}
 			}
-			
 		},
 		
 		_showConfirm: function(message, confirmCallback){
-			navigator.notification.confirm(message, confirmCallback, 'InstaMeet', ['Yes','No'])
+			if(navigator.notification){
+				navigator.notification.confirm(message, confirmCallback, 'InstaMeet', ['Yes','No'])
+			}
 		},
 		
 		initPushwoosh: function(){
@@ -2037,13 +2067,7 @@ var Controller = function () {
 				//set push notifications handler
 				document.addEventListener('push-notification', function(event) {
 					var title = event.notification.title;
-					var userData = event.notification.userdata;
-											 
-					if(typeof(userData) != "undefined") {
-						console.warn('user data: ' + JSON.stringify(userData));
-					}
-												 
-					console.log(event.notification);
+					var userData = event.notifications.data.about;
 				});
 			 
 				//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.

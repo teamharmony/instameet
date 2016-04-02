@@ -7,6 +7,7 @@
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <!-- <link href="css/themes/2/jquery.mobile.icons.min.css" rel="stylesheet" /> -->
+        <link rel="stylesheet" type="text/css" href="css/DateTimePicker.css" />
         <link rel="old stylesheet" type="text/css" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css"/>
         <link rel="new stylesheet" type="text/css" href="css/index.css" />
         <link rel="newest stylesheet" type="text/css" href="css/style.css" />
@@ -244,7 +245,8 @@
                 <input id="txtToMeeting" type="hidden" placeholder="To">
                 <input id="txtToNameMeeting" type="text" placeholder="To">
                 <input id="txtAgendaMeeting" type="text" placeholder="Agenda">
-                <input id="txtDatetimeMeeting" type="datetime-local" data-clear-btn="false"  placeholder="yyyy-mm-dd hh:mm a">
+                <input id="txtDatetimeMeeting" type="text" data-field="datetime" placeholder="dd-MMM-yyyy hh:mm AA" >
+                <div id="dtBox"></div>
                 <p id="errorDT" class="display error">Time needs to be atleast 30 mins later.</p>
                 <input id="txtVenueMeeting" type="text" placeholder="Venue">
                 <textarea id="taDescMeeting" placeholder="Description" rows="5" cols="30" data-autogrow="false"></textarea>
@@ -348,6 +350,7 @@
         <script type="text/javascript" src="js/social-connect/opengl.js"></script>
 		<script type="text/javascript" src="js/authenticationProxy.js"></script>
 		<script type="text/javascript" src="js/map/googleMap.js"></script>
+        <script type="text/javascript" src="js/DateTimePicker.js"></script>
         <script type="text/javascript" src="js/Controller.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
     </body>
