@@ -2,7 +2,7 @@ var Controller = function () {
 	var hostUrl = "http://vps.hilfe.website:8080/ResourceMgmt",
 	//var hostUrl = "http://localhost:8080/ResourceMgmt",
 	clientId = "meetMePal",
-	userLoggedIn, watchID, cordova =false;
+	userLoggedIn, watchID;//, cordova =false;
 	//window.localStorage.instameet_loginBy = "normal";
 
 	var controller = {
@@ -92,6 +92,8 @@ var Controller = function () {
 			if (window.localStorage.instameet_loginBy === "normal") {
 				if (window.localStorage.instameet_refresh_token) {
 					_self.directLoginApp("normal");
+				} else {
+					$.mobile.navigate("#page-welcome");
 				}
 			} else if (window.localStorage.instameet_loginBy === "fb") {
 				openFB.getLoginStatus(function (response) {
@@ -115,6 +117,7 @@ var Controller = function () {
 		
 		directLoginApp : function (loginBy) {
 			function loginSuccess() {
+				alert(_self.pushNotificationUserData);
 				$.mobile.navigate('#page-home');
 				userLoggedIn = window.localStorage.userLogIn;
 				window.localStorage.instameet_loginBy = loginBy;
@@ -611,9 +614,24 @@ var Controller = function () {
 		
 		onMapError: function(error){
 			//_self.onLocationError(error);
+
 			_self.loading("hide");
-			//_self._showAlert("Please enable your location services to use InstaMeet.");
-			//navigator.app.exitApp();
+			if(_self.latitude != '' && _self.longitude != ''){
+				var lat = _self.latitude, lng = _self.longitude,
+					 obj = map.getLatLongRange(lat, lng);
+				$.ajax({
+					url : hostUrl.concat("/search/location"),
+					type : 'GET',
+					data : obj
+				}).done(function (user) {
+					if (user.length > 0) {
+						map.showOnMap(user, userLoggedIn);
+						_self.renderListView(user, that.latlng);
+					}
+					_self.loading("hide");
+				});	
+			}
+			
 		},
 		
 		onMapSuccess : function (lat, lng) {
@@ -2067,7 +2085,7 @@ var Controller = function () {
 				//set push notifications handler
 				document.addEventListener('push-notification', function(event) {
 					var title = event.notification.title;
-					var userData = event.notifications.data.about;
+					_self.pushNotificationUserData = event.notifications.data.about;
 				});
 			 
 				//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.

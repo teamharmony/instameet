@@ -78,20 +78,22 @@ var Controller = function () {
 		},
 		
 		checkLogin : function () {
-			navigator.geolocation.getCurrentPosition(function(success){
+			/*navigator.geolocation.getCurrentPosition(function(success){
 				
 			}, function(error){
 				function okCallback(){
 					navigator.app.exitApp();
 				};
 				_self._showAlert("Please enable your location services to use InstaMeet.", okCallback);
-			} );
+			} );*/
 			
 			_self.initPushwoosh();
 			_self.welcome();
 			if (window.localStorage.instameet_loginBy === "normal") {
 				if (window.localStorage.instameet_refresh_token) {
 					_self.directLoginApp("normal");
+				} else {
+					$.mobile.navigate("#page-welcome");
 				}
 			} else if (window.localStorage.instameet_loginBy === "fb") {
 				openFB.getLoginStatus(function (response) {
@@ -115,6 +117,7 @@ var Controller = function () {
 		
 		directLoginApp : function (loginBy) {
 			function loginSuccess() {
+				alert(_self.pushNotificationUserData);
 				$.mobile.navigate('#page-home');
 				userLoggedIn = window.localStorage.userLogIn;
 				window.localStorage.instameet_loginBy = loginBy;
@@ -579,7 +582,7 @@ var Controller = function () {
 			$('#btnLogout').on('click', _self.onLogoutClickHandler);
 
 			_self.getMessageMeeting();
-			
+
 			$('#btnEditProfile').off('click');
 			$('#btnEditProfile').on('click', function (e) {
 				$.mobile.navigate('#page-edit');
@@ -611,14 +614,48 @@ var Controller = function () {
 		
 		onMapError: function(error){
 			//_self.onLocationError(error);
+
 			_self.loading("hide");
-			//_self._showAlert("Please enable your location services to use InstaMeet.");
-			//navigator.app.exitApp();
+			if(_self.latitude != '' && _self.longitude != ''){
+				var lat = _self.latitude, lng = _self.longitude,
+					 obj = map.getLatLongRange(lat, lng);
+				$.ajax({
+					url : hostUrl.concat("/search/location"),
+					type : 'GET',
+					data : obj
+				}).done(function (user) {
+					if (user.length > 0) {
+						map.showOnMap(user, userLoggedIn);
+						_self.renderListView(user, that.latlng);
+					}
+					_self.loading("hide");
+				});	
+			}
+			
 		},
 		
 		onMapSuccess : function (lat, lng) {
+
 			var that = this;
-			_self.updateLocation();
+			if($('#btnTrackMe').text() === 'Track me on'){
+				_self.updateLocation();
+			}
+		
+			$('#btnTrackMe').off('click');
+			$('#btnTrackMe').on('click', function(){
+				var text = $('#btnTrackMe').text();
+				if(text === 'Track me on'){
+					$('#btnTrackMe').text('Track me off');
+					if (watchID != null) {
+						navigator.geolocation.clearWatch(watchID);
+						watchID = null;
+					}
+				} else {
+					$('#btnTrackMe').text('Track me on');
+					_self.updateLocation();
+				}
+			});
+			//_self.updateLocation();
 			this.latlng = {'lat': lat, 'lng': lng};
 
 			if($('#search-input').val() !== ""){
@@ -1193,7 +1230,8 @@ var Controller = function () {
 			this.$btnSendMessage.on('click', function (e) {
 				_self.loading("show");
 					
-				var sendData = $('#page-messages').data('sendData'), sendMessData = {}, parentId, topicId;
+				var sendData = $('#page-messages').data('sendData'), sendMessData = {}, parentId, topicId,
+				dateTime = new Date();
 				
 				if(sendData.username){
 					var data = _self.messages[sendData.username];
@@ -1207,11 +1245,13 @@ var Controller = function () {
 						sendMessData = { 'parentId' : parentId,
 										 'topicId': topicId,
 										 'toUserName' : that.$to.val(),
-										 'message' : that.$message.val()
+										 'message' : that.$message.val(),
+										 'dateTime' : Math.round(dateTime.getTime()/1000)
 										};
 					} else {
 						sendMessData = { 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
+									 'message' : that.$message.val(),
+									 'dateTime' : Math.round(dateTime.getTime()/1000)
 									};
 					}
 					
@@ -1225,26 +1265,11 @@ var Controller = function () {
 					sendMessData = { 'parentId' : parentId,
 									 'topicId': topicId,
 									 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
+									 'message' : that.$message.val(),
+									 'dateTime' : Math.round(dateTime.getTime()/1000)
 									};
 				}
-				/*if(replyMessData){
-					parentId = replyMessData.id;
-					if(replyMessData.topicId === -1){
-						topicId = replyMessData.id;
-					} else {
-						topicId = replyMessData.topicId;
-					}
-					sendMessData = { 'parentId' : parentId,
-									 'topicId': topicId,
-									 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
-									};
-				} else {
-					sendMessData = { 'toUserName' : that.$to.val(),
-									 'message' : that.$message.val()
-									};
-				}*/
+				
 				$.ajax({
 					url : hostUrl.concat("/messages?access_token=" + window.bearerToken),
 					type : 'POST',
@@ -1310,10 +1335,12 @@ var Controller = function () {
 						//var messArr =_self.messages[messData.topicId === -1 ? messData.id : messData.topicId];
 						var messArr = messData;
 						for (var i = 0; i < messArr.length; i++) {
+							var dt = new Date();
+							dt.setTime(messArr[i].datetime*1000);
 							if(messArr[i].fromUserName !== null){
-								this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'</li>');
+								this.$messageViewListItem.append('<li class="messageRecieve">'+ messArr[i].message +'<span class="datetime">'+ dt.toLocaleString() +'</span></li>');
 							} else {
-								this.$messageViewListItem.append('<li class="messageSend">'+ messArr[i].message +'</li>');
+								this.$messageViewListItem.append('<li class="messageSend">'+ messArr[i].message +'<span class="datetime">'+ dt.toLocaleString() +'</span></li>');
 							}
 							
 							$.ajax({
@@ -1372,12 +1399,15 @@ var Controller = function () {
 				
 				$.each(_self.messages, function(index, value){
 					var obj =this[this.length - 1];
+					var dt = new Date();
+					dt.setTime(obj.datetime*1000);
+
 					if (obj.fromUserName !== null) {
 						if (obj.fromStatus !== -1) {
 							if(obj.toStatus === 0){
-								that.$messagelist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								that.$messagelist.prepend("<li id='" + obj.id + "' class='listItem unReadMessage messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 							} else {
-								that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div></li>");
+								that.$messagelist.append("<li id='" + obj.id + "' class='listItem messRecieve" + obj.toStatus + "'><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='recieveIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-down'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 							}
 							
 
@@ -1403,7 +1433,7 @@ var Controller = function () {
 					}
 					if (obj.toUserName !== null) {
 						if (obj.toStatus !== -1) {
-							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div></li>");
+							that.$messagelist.append("<li id='" + obj.id + "' class='listItem messSend' ><div class='ltProfilePicDiv'><img class='ltProfilePic' src='img/defaultImg.png' /></div><div class='ltInfoDiv'><h1 class='list-name'>" + obj.name + "</h1><p class='list-subject'>" + obj.message + " </p></div><div class='sentIcon'><span aria-hidden='true' class='glyphicon glyphicon-arrow-up'></span></div><span class='datetime'>"+ dt.toLocaleString() +"</span></li>");
 
 							that.$messagelistItem = $('#' + obj.id);
 							that.$messagelistItem.data('messData', this);
@@ -2055,13 +2085,7 @@ var Controller = function () {
 				//set push notifications handler
 				document.addEventListener('push-notification', function(event) {
 					var title = event.notification.title;
-					var userData = event.notification.userdata;
-											 
-					if(typeof(userData) != "undefined") {
-						console.warn('user data: ' + JSON.stringify(userData));
-					}
-												 
-					console.log(event.notification);
+					_self.pushNotificationUserData = event.notifications.data.about;
 				});
 			 
 				//initialize Pushwoosh with projectid: "GOOGLE_PROJECT_NUMBER", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.
